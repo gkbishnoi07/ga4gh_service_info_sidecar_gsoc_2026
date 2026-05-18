@@ -1,0 +1,2 @@
+# ga4gh_service_info_sidecar_gsoc_2026
+GA4GH ServiceInfo Sidecar
