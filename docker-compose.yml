@@ -1,0 +1,12 @@
+# docker-compose.yml
+# TODO: Phase 1 — implement local dev setup
+#
+# services:
+#   sidecar:
+#     build: .
+#     ports:
+#       - "8080:8080"
+#     volumes:
+#       - ./configs:/app/configs   # mount config as volume (Kubernetes-style)
+#     environment:
+#       - SIDECAR_CONFIG_FILE=/app/configs/service_info.yaml
