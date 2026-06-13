@@ -1,19 +1,31 @@
-# configs/service_info.yaml
-# Default ServiceInfo configuration for the sidecar.
-# This file can be mounted as a Kubernetes ConfigMap.
-# TODO: Phase 3 — fill in real values
+# GA4GH ServiceInfo Sidecar Default Configuration
+# This file provides the actual values returned by GET /service-info.
+# Field order and names follow the GA4GH ServiceInfo v1 specification:
+# https://github.com/ga4gh-discovery/ga4gh-service-info
 
-# id: "org.ga4gh.serviceinfo-sidecar"
-# name: "GA4GH ServiceInfo Sidecar"
-# version: "0.1.0"
-# description: ""
-# environment: "prod"
-#
-# organization:
-#   name: "ELIXIR"
-#   url: "https://elixir-europe.org"
-#
-# type:
-#   group: "org.ga4gh"
-#   artifact: "service-info"
-#   version: "1.0.0"
+# --- Required fields (from GA4GH spec) ---
+
+id: "org.ga4gh.serviceinfo-sidecar"
+
+name: "GA4GH ServiceInfo Sidecar"
+
+type:
+  group: "org.ga4gh"
+  artifact: "service-info"
+  version: "1.0.0"
+
+organization:
+  name: "GA4GH"
+  url: "https://www.ga4gh.org"
+
+version: "0.1.0"
+
+# --- Optional fields ---
+
+description: "A reusable sidecar service for standardizing GA4GH ServiceInfo metadata."
+environment: "dev"
+
+# contactUrl:    "https://..."        # optional — contact form or mailto:
+# documentationUrl: "https://..."    # optional — docs URL
+# createdAt:     "2026-06-01T00:00:00Z"   # optional — ISO 8601
+# updatedAt:     "2026-06-11T00:00:00Z"   # optional — ISO 8601
