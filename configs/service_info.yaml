@@ -1,0 +1,19 @@
+# configs/service_info.yaml
+# Default ServiceInfo configuration for the sidecar.
+# This file can be mounted as a Kubernetes ConfigMap.
+# TODO: Phase 3 — fill in real values
+
+# id: "org.ga4gh.serviceinfo-sidecar"
+# name: "GA4GH ServiceInfo Sidecar"
+# version: "0.1.0"
+# description: ""
+# environment: "prod"
+#
+# organization:
+#   name: "ELIXIR"
+#   url: "https://elixir-europe.org"
+#
+# type:
+#   group: "org.ga4gh"
+#   artifact: "service-info"
+#   version: "1.0.0"
