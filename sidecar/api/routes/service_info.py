@@ -20,7 +20,7 @@ router = APIRouter()
     ),
     tags=["Service Info"],
 )
-async def get_service_info() -> Service:
+def get_service_info() -> Service:
     """Return GA4GH ServiceInfo metadata loaded from configuration."""
     from sidecar.core.provider import get_service_info_response
 
