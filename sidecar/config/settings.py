@@ -9,7 +9,7 @@ import yaml
 from sidecar.models.service_info import Organization, Service, ServiceType
 
 # Default config path can be overridden by the SIDECAR_CONFIG_FILE env var
-DEFAULT_CONFIG_PATH = Path(__file__).parent.parent.parent / "configs" / "service_info.yaml"
+DEFAULT_CONFIG_PATH = Path.cwd() / "configs" / "service_info.yaml"
 
 
 def load_service_info(config_path: Path | None = None) -> Service:
