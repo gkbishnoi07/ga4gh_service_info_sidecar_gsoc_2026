@@ -26,9 +26,7 @@ class ServiceType(BaseModel):
         description="Name of the GA4GH specification implemented.",
         examples=["service-info", "drs", "tes", "wes"],
     )
-    version: str = Field(
-        ..., description="Version of the specification.", examples=["1.0.0"]
-    )
+    version: str = Field(..., description="Version of the specification.", examples=["1.0.0"])
 
 
 class Service(BaseModel):
@@ -48,9 +46,7 @@ class Service(BaseModel):
         description="Human-readable name of the service.",
         examples=["GA4GH ServiceInfo Sidecar"],
     )
-    version: str = Field(
-        ..., description="Version of the service.", examples=["0.1.0"]
-    )
+    version: str = Field(..., description="Version of the service.", examples=["0.1.0"])
     type: ServiceType = Field(..., description="GA4GH specification type implemented.")
     organization: Organization = Field(
         ..., description="Organization responsible for this service."

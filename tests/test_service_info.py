@@ -106,8 +106,7 @@ def test_response_includes_set_optional_fields() -> None:
     assert "description" in data
     assert "environment" in data
     assert data["description"] == (
-        "A reusable sidecar service for standardizing GA4GH "
-        "ServiceInfo metadata."
+        "A reusable sidecar service for standardizing GA4GH ServiceInfo metadata."
     )
     assert data["environment"] == "dev"
 
@@ -184,7 +183,7 @@ def test_service_model_all_optional_fields() -> None:
 
 
 def test_service_model_populate_by_alias() -> None:
-    """Service model can be constructed using camelCase alias names (populate_by_name)."""
+    """Service model can be constructed using camelCase alias names."""
     svc = Service(
         id="test.service",
         name="Test",
@@ -394,6 +393,10 @@ def test_load_config_with_optional_fields(tmp_path: Path) -> None:
             version: "1.0.0"
             description: "A fully configured service"
             environment: "prod"
+            contactUrl: "https://contact.example.com"
+            documentation_url: "https://docs.example.com"
+            createdAt: "2026-01-01T00:00:00Z"
+            updated_at: "2026-06-01T00:00:00Z"
             type:
               group: "org.ga4gh"
               artifact: "drs"
@@ -407,6 +410,34 @@ def test_load_config_with_optional_fields(tmp_path: Path) -> None:
     service = load_service_info(config_path=full_config)
     assert service.description == "A fully configured service"
     assert service.environment == "prod"
+    assert str(service.contact_url) == "https://contact.example.com/"
+    assert str(service.documentation_url) == "https://docs.example.com/"
+    assert service.created_at == "2026-01-01T00:00:00Z"
+    assert service.updated_at == "2026-06-01T00:00:00Z"
+
+
+def test_load_config_env_var_override(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """load_service_info should use the path from SIDECAR_CONFIG_FILE env var if set."""
+    env_config = tmp_path / "env_override.yaml"
+    env_config.write_text(
+        dedent("""\
+            id: "env.service"
+            name: "Env Service"
+            version: "1.0.0"
+            type:
+              group: "org.ga4gh"
+              artifact: "drs"
+              version: "1.0.0"
+            organization:
+              name: "Env Org"
+              url: "https://env.example.com"
+        """),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SIDECAR_CONFIG_FILE", str(env_config))
+    service = load_service_info()
+    assert service.id == "env.service"
+    assert service.name == "Env Service"
 
 
 def test_load_config_default_path_works() -> None:
@@ -460,7 +491,7 @@ def test_load_config_yaml_with_tabs(tmp_path: Path) -> None:
     """YAML with tab indentation should raise yaml.YAMLError."""
     tabbed = tmp_path / "tabs.yaml"
     tabbed.write_text(
-        "id: \"test\"\n\tname: \"Test\"\n",
+        'id: "test"\n\tname: "Test"\n',
         encoding="utf-8",
     )
     with pytest.raises(yaml.YAMLError):
@@ -468,7 +499,28 @@ def test_load_config_yaml_with_tabs(tmp_path: Path) -> None:
 
 
 # ──────────────────────────────────────────────
-# 8. Config Loader — Wrong data types in YAML
+# 8. Config Loader — Non-dict top-level YAML
+# ──────────────────────────────────────────────
+
+
+def test_load_config_yaml_top_level_string(tmp_path: Path) -> None:
+    """A YAML file containing a plain string should raise TypeError."""
+    string_yaml = tmp_path / "string.yaml"
+    string_yaml.write_text('"just a string"', encoding="utf-8")
+    with pytest.raises(TypeError, match="YAML mapping"):
+        load_service_info(config_path=string_yaml)
+
+
+def test_load_config_yaml_top_level_list(tmp_path: Path) -> None:
+    """A YAML file containing a list should raise TypeError."""
+    list_yaml = tmp_path / "list.yaml"
+    list_yaml.write_text("- item1\n- item2\n", encoding="utf-8")
+    with pytest.raises(TypeError, match="YAML mapping"):
+        load_service_info(config_path=list_yaml)
+
+
+# ──────────────────────────────────────────────
+# 9. Config Loader — Wrong data types in YAML
 # ──────────────────────────────────────────────
 
 
@@ -535,7 +587,7 @@ def test_load_config_version_is_number_instead_of_string(tmp_path: Path) -> None
 
 
 # ──────────────────────────────────────────────
-# 9. Config Loader — Missing nested YAML fields
+# 10. Config Loader — Missing nested YAML fields
 # ──────────────────────────────────────────────
 
 
@@ -601,7 +653,7 @@ def test_load_config_type_section_completely_empty(tmp_path: Path) -> None:
 
 
 # ──────────────────────────────────────────────
-# 10. Endpoint behavior when config loading fails
+# 11. Endpoint behavior when config loading fails
 # ──────────────────────────────────────────────
 
 
@@ -631,7 +683,7 @@ def test_endpoint_returns_500_when_validation_fails() -> None:
 
 
 # ──────────────────────────────────────────────
-# 11. Full response schema validation
+# 12. Full response schema validation
 # ──────────────────────────────────────────────
 
 
@@ -653,8 +705,16 @@ def test_response_has_no_extra_unexpected_fields() -> None:
     data = client.get("/service-info").json()
 
     allowed_keys = {
-        "id", "name", "version", "type", "organization",
-        "description", "environment",
-        "contactUrl", "documentationUrl", "createdAt", "updatedAt",
+        "id",
+        "name",
+        "version",
+        "type",
+        "organization",
+        "description",
+        "environment",
+        "contactUrl",
+        "documentationUrl",
+        "createdAt",
+        "updatedAt",
     }
     assert set(data.keys()).issubset(allowed_keys)
