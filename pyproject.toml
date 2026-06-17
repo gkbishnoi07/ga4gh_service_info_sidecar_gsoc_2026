@@ -25,6 +25,7 @@ dev = [
   "pre-commit>=3.7",
   "mkdocs>=1.6",
   "mkdocs-material>=9.5",
+  "types-PyYAML",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -40,6 +41,9 @@ select = ["E", "F", "I", "UP"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
+plugins = [
+  "pydantic.mypy"
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
