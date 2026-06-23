@@ -24,7 +24,7 @@ class ServiceType(BaseModel):
     artifact: str = Field(
         ...,
         description="Name of the GA4GH specification implemented.",
-        examples=["service-info", "drs", "tes", "wes"],
+        examples=["service-info", "drs"],
     )
     version: str = Field(..., description="Version of the specification.", examples=["1.0.0"])
 
@@ -57,7 +57,7 @@ class Service(BaseModel):
         description="Deployment environment.",
         examples=["prod", "staging", "dev"],
     )
-    contact_url: AnyHttpUrl | None = Field(
+    contact_url: str | None = Field(
         default=None,
         alias="contactUrl",
         description="URL to contact the service provider.",

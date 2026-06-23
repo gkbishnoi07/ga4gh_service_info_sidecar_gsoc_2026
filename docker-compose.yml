@@ -1,12 +1,29 @@
-# docker-compose.yml
-# TODO: Phase 1 — implement local dev setup
+# docker-compose.yml — Phase 1 local development setup
 #
-# services:
-#   sidecar:
-#     build: .
-#     ports:
-#       - "8080:8080"
-#     volumes:
-#       - ./configs:/app/configs   # mount config as volume (Kubernetes-style)
-#     environment:
-#       - SIDECAR_CONFIG_FILE=/app/configs/service_info.yaml
+# Usage: docker-compose up --build
+#
+# This starts both the sidecar and a real GA4GH DRS Starter Kit.
+# The sidecar intercepts /service-info requests and proxies all
+# other traffic to the DRS service.
+#
+# IMPORTANT: In docker-compose, containers communicate by service name,
+# not localhost. The sidecar reaches DRS at http://drs:4500.
+# In Kubernetes pods, they share a network namespace and use localhost.
+
+services:
+  drs:
+    image: ga4gh/ga4gh-starter-kit-drs:0.3.2
+    ports:
+      - "8081:4500"      # DRS listens on 4500 internally
+
+  sidecar:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - drs
+    volumes:
+      - ./configs:/app/configs
+    environment:
+      - SIDECAR_CONFIG_FILE=/app/configs/service_info.yaml
+      - SIDECAR_UPSTREAM_URL=http://drs:4500

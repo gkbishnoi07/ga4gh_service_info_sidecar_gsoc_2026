@@ -20,7 +20,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from sidecar.config.settings import load_service_info
-from sidecar.core.provider import get_service_info_response
+from sidecar.core.provider import get_service_info_sync
 from sidecar.main import app
 from sidecar.models.service_info import Organization, Service, ServiceType
 
@@ -81,8 +81,8 @@ def test_response_values_match_default_config() -> None:
     assert data["name"] == "GA4GH ServiceInfo Sidecar"
     assert data["version"] == "0.1.0"
     assert data["type"]["group"] == "org.ga4gh"
-    assert data["type"]["artifact"] == "service-info"
-    assert data["type"]["version"] == "1.0.0"
+    assert data["type"]["artifact"] == "drs"
+    assert data["type"]["version"] == "1.3.0"
     assert data["organization"]["name"] == "GA4GH"
     assert data["organization"]["url"] == "https://www.ga4gh.org/"
 
@@ -176,7 +176,7 @@ def test_service_model_all_optional_fields() -> None:
     )
     assert svc.description == "A test service"
     assert svc.environment == "staging"
-    assert str(svc.contact_url) == "https://contact.example.com/"
+    assert svc.contact_url == "https://contact.example.com"
     assert str(svc.documentation_url) == "https://docs.example.com/"
     assert svc.created_at == "2026-01-01T00:00:00Z"
     assert svc.updated_at == "2026-06-01T00:00:00Z"
@@ -195,7 +195,7 @@ def test_service_model_populate_by_alias() -> None:
         createdAt="2026-01-01T00:00:00Z",
         updatedAt="2026-06-01T00:00:00Z",
     )
-    assert str(svc.contact_url) == "https://contact.example.com/"
+    assert svc.contact_url == "https://contact.example.com"
     assert str(svc.documentation_url) == "https://docs.example.com/"
     assert svc.created_at == "2026-01-01T00:00:00Z"
     assert svc.updated_at == "2026-06-01T00:00:00Z"
@@ -410,7 +410,7 @@ def test_load_config_with_optional_fields(tmp_path: Path) -> None:
     service = load_service_info(config_path=full_config)
     assert service.description == "A fully configured service"
     assert service.environment == "prod"
-    assert str(service.contact_url) == "https://contact.example.com/"
+    assert service.contact_url == "https://contact.example.com"
     assert str(service.documentation_url) == "https://docs.example.com/"
     assert service.created_at == "2026-01-01T00:00:00Z"
     assert service.updated_at == "2026-06-01T00:00:00Z"
@@ -452,14 +452,14 @@ def test_load_config_default_path_works() -> None:
 
 
 def test_provider_returns_service_object() -> None:
-    """get_service_info_response should return a Service instance."""
-    result = get_service_info_response()
+    """get_service_info_sync should return a Service instance."""
+    result = get_service_info_sync()
     assert isinstance(result, Service)
 
 
 def test_provider_returns_valid_data() -> None:
     """Provider output should have the correct id from the default config."""
-    result = get_service_info_response()
+    result = get_service_info_sync()
     assert result.id == "org.ga4gh.serviceinfo-sidecar"
     assert result.name == "GA4GH ServiceInfo Sidecar"
 

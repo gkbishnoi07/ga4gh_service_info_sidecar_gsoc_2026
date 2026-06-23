@@ -1,9 +1,19 @@
-# GA4GH ServiceInfo Sidecar Default Configuration
-# This file provides the actual values returned by GET /service-info.
-# Field order and names follow the GA4GH ServiceInfo v1 specification:
+# GA4GH ServiceInfo Sidecar Configuration
+# This file provides both operational settings and metadata overrides.
+# Field names follow the GA4GH ServiceInfo v1 specification:
 # https://github.com/ga4gh-discovery/ga4gh-service-info
 
-# --- Required fields (from GA4GH spec) ---
+# --- Sidecar operational settings ---
+# These control sidecar behavior. Override with SIDECAR_* env vars.
+
+upstream_url: "http://localhost:8081"
+service_type: "drs"
+service_info_path: "/ga4gh/drs/v1/service-info"
+upstream_merge: true
+
+# --- Required ServiceInfo fields (from GA4GH spec) ---
+# These are served directly when upstream_merge is false,
+# or used as operator overrides when upstream_merge is true.
 
 id: "org.ga4gh.serviceinfo-sidecar"
 
@@ -11,8 +21,8 @@ name: "GA4GH ServiceInfo Sidecar"
 
 type:
   group: "org.ga4gh"
-  artifact: "service-info"
-  version: "1.0.0"
+  artifact: "drs"
+  version: "1.3.0"
 
 organization:
   name: "GA4GH"

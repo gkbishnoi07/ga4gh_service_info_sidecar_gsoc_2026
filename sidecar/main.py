@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from sidecar.api.routes.proxy import router as proxy_router
 from sidecar.api.routes.service_info import router as service_info_router
 
 app = FastAPI(
@@ -17,4 +18,9 @@ app = FastAPI(
     },
 )
 
+# Order matters: explicit /service-info route is registered first.
+# FastAPI's built-in /docs, /openapi.json, /redoc are always matched
+# before any router routes.
+# The catch-all proxy route is registered last.
 app.include_router(service_info_router)
+app.include_router(proxy_router)

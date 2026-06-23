@@ -1,4 +1,10 @@
-"""GET /service-info route handler."""
+"""GET /service-info route handler (base path).
+
+Serves GA4GH ServiceInfo at the root ``/service-info`` path.
+This is the backward-compatible MVP route. The configurable path
+(e.g. ``/ga4gh/drs/v1/service-info``) is handled by the catch-all
+proxy route.
+"""
 
 from fastapi import APIRouter
 
@@ -22,6 +28,6 @@ router = APIRouter()
 )
 def get_service_info() -> Service:
     """Return GA4GH ServiceInfo metadata loaded from configuration."""
-    from sidecar.core.provider import get_service_info_response
+    from sidecar.core.provider import get_service_info_sync
 
-    return get_service_info_response()
+    return get_service_info_sync()
