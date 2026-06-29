@@ -19,15 +19,7 @@ from sidecar.models.service_info import Organization, Service, ServiceType
 # Default config path can be overridden by the SIDECAR_CONFIG_FILE env var
 DEFAULT_CONFIG_PATH = Path.cwd() / "configs" / "service_info.yaml"
 
-# Keys that are operational settings, not ServiceInfo metadata overrides
-_OPERATIONAL_KEYS = frozenset(
-    {
-        "upstream_url",
-        "service_type",
-        "service_info_path",
-        "upstream_merge",
-    }
-)
+
 
 
 @dataclass
@@ -88,7 +80,15 @@ def load_config(config_path: Path | None = None) -> SidecarSettings:
     service_type = raw.pop("service_type", "drs")
     service_info_path = raw.pop("service_info_path", "/ga4gh/drs/v1/service-info")
     upstream_merge_raw = raw.pop("upstream_merge", True)
-    upstream_merge = bool(upstream_merge_raw)
+    # Handle both bool and string values correctly:
+    # YAML "false"/"False" are parsed as bool by pyyaml, but if a string
+    # slips through (e.g. env injection), bool("false") would be True.
+    if isinstance(upstream_merge_raw, bool):
+        upstream_merge = upstream_merge_raw
+    elif isinstance(upstream_merge_raw, str):
+        upstream_merge = upstream_merge_raw.lower() in ("true", "1", "yes")
+    else:
+        upstream_merge = bool(upstream_merge_raw)
 
     # Apply SIDECAR_* environment variable overrides for operational settings
     upstream_url = os.getenv("SIDECAR_UPSTREAM_URL", upstream_url)

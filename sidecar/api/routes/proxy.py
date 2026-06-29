@@ -40,9 +40,14 @@ async def _proxy_to_upstream(request: Request, upstream_url: str) -> Response:
     if query:
         target = f"{target}?{query}"
 
-    # Forward headers (exclude host — httpx sets it from the target URL)
-    headers = dict(request.headers)
-    headers.pop("host", None)
+    # Forward headers — exclude hop-by-hop headers that are per-connection
+    # and should not be relayed to the upstream (RFC 2616 §13.5.1)
+    _hop_by_hop_request = {"host", "connection", "te", "upgrade", "proxy-connection",
+                           "keep-alive", "transfer-encoding"}
+    headers = {
+        k: v for k, v in request.headers.items()
+        if k.lower() not in _hop_by_hop_request
+    }
 
     body = await request.body()
 
@@ -67,17 +72,19 @@ async def _proxy_to_upstream(request: Request, upstream_url: str) -> Response:
             content={"detail": "Upstream service timed out"},
         )
 
-    # Build response — strip hop-by-hop headers
-    excluded_headers = {"transfer-encoding", "content-encoding", "content-length"}
-    response_headers: dict[str, str] = {
-        k: v for k, v in upstream_response.headers.items() if k.lower() not in excluded_headers
-    }
-
-    return Response(
+    # Build response — strip hop-by-hop headers and preserve multi-value
+    # headers (e.g. Set-Cookie) by iterating with multi_items()
+    excluded_headers = {"transfer-encoding", "content-encoding", "content-length",
+                        "connection", "keep-alive"}
+    response = Response(
         content=upstream_response.content,
         status_code=upstream_response.status_code,
-        headers=response_headers,
     )
+    for k, v in upstream_response.headers.multi_items():
+        if k.lower() not in excluded_headers:
+            response.headers.append(k, v)
+
+    return response
 
 
 @router.api_route(

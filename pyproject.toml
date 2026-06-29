@@ -14,8 +14,6 @@ dependencies = [
   "pydantic>=2.7",
   "pyyaml>=6.0",
   "httpx>=0.28",
-  "python-dotenv>=1.0",
-  "watchfiles>=1.0",
 ]
 
 [project.optional-dependencies]
@@ -29,6 +27,8 @@ dev = [
   "httpx>=0.28",
   "pre-commit>=3.7",
   "types-PyYAML",
+  "python-dotenv>=1.0",
+  "watchfiles>=1.0",
   "mkdocs>=1.6",
   "mkdocs-material>=9.5",
   "mkdocstrings[python]>=0.24.0",
