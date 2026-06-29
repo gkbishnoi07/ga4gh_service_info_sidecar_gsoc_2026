@@ -42,12 +42,16 @@ async def _proxy_to_upstream(request: Request, upstream_url: str) -> Response:
 
     # Forward headers — exclude hop-by-hop headers that are per-connection
     # and should not be relayed to the upstream (RFC 2616 §13.5.1)
-    _hop_by_hop_request = {"host", "connection", "te", "upgrade", "proxy-connection",
-                           "keep-alive", "transfer-encoding"}
-    headers = {
-        k: v for k, v in request.headers.items()
-        if k.lower() not in _hop_by_hop_request
+    _hop_by_hop_request = {
+        "host",
+        "connection",
+        "te",
+        "upgrade",
+        "proxy-connection",
+        "keep-alive",
+        "transfer-encoding",
     }
+    headers = {k: v for k, v in request.headers.items() if k.lower() not in _hop_by_hop_request}
 
     body = await request.body()
 
@@ -74,8 +78,13 @@ async def _proxy_to_upstream(request: Request, upstream_url: str) -> Response:
 
     # Build response — strip hop-by-hop headers and preserve multi-value
     # headers (e.g. Set-Cookie) by iterating with multi_items()
-    excluded_headers = {"transfer-encoding", "content-encoding", "content-length",
-                        "connection", "keep-alive"}
+    excluded_headers = {
+        "transfer-encoding",
+        "content-encoding",
+        "content-length",
+        "connection",
+        "keep-alive",
+    }
     response = Response(
         content=upstream_response.content,
         status_code=upstream_response.status_code,

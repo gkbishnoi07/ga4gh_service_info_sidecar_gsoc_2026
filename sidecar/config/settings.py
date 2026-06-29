@@ -20,8 +20,6 @@ from sidecar.models.service_info import Organization, Service, ServiceType
 DEFAULT_CONFIG_PATH = Path.cwd() / "configs" / "service_info.yaml"
 
 
-
-
 @dataclass
 class SidecarSettings:
     """Operational configuration for the sidecar.
