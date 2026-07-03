@@ -2,18 +2,24 @@
 
 Welcome to the **ServiceInfo Sidecar** documentation!
 
-A reusable sidecar service for standardizing and extending GA4GH ServiceInfo metadata across implementations such as TES, WES, DRS, and TRS.
+A lightweight, standalone Go service that standardizes GA4GH ServiceInfo metadata across implementations such as DRS, TES, WES, and TRS.
 
-## Key Objectives
+## How It Works
 
-- **Standardization**: Provide a single, reusable GA4GH ServiceInfo implementation.
-- **Easy Integration**: Run alongside existing services as a sidecar container.
-- **Configurable**: Fully configurable via YAML and environment variables.
+Instead of proxying all traffic, the sidecar runs as its own Kubernetes Pod. The cluster's **Ingress controller** routes `/service-info` requests to the sidecar, while everything else goes directly to the real GA4GH service. If the sidecar is down, only `/service-info` is affected — the real service keeps running.
+
+## Key Features
+
+- **Go** — Single static binary, `scratch` container (<20MB), starts in <100ms
+- **Ingress Routing** — No reverse proxy overhead, no blast radius, one Ingress rule
+- **ConfigMap Hot Reload** — Update metadata via GitOps with zero restart
+- **GA4GH Compliant** — Validated against the ServiceInfo v1 specification
+- **Kubernetes Native** — `/healthz` + `/readyz` probes, ConfigMap volumes
 
 ---
 
-!!! info "Early Development"
-    This project is in an early development phase. Active development is underway on core interfaces, schemas, and models.
+!!! info "Active Development"
+    This project is in active development as part of **Google Summer of Code 2026** under **GA4GH**.
 
 ---
 

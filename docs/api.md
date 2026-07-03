@@ -1,15 +1,83 @@
 # API Reference
 
-This section documents the Python API reference for the GA4GH ServiceInfo Sidecar models and core logic.
+The GA4GH ServiceInfo Sidecar exposes three HTTP endpoints. All responses use `Content-Type: application/json`.
 
-## ServiceInfo Models
+---
 
-::: sidecar.models.service_info
+## `GET /service-info`
 
-## Configuration
+Returns the GA4GH ServiceInfo metadata as JSON, conforming to the [ServiceInfo v1 specification](https://github.com/ga4gh-discovery/ga4gh-service-info).
 
-::: sidecar.config.settings
+### Response
 
-## Core Provider Logic
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | string | ✅ | Unique identifier for the service |
+| `name` | string | ✅ | Human-readable name |
+| `type` | object | ✅ | Service type (`group`, `artifact`, `version`) |
+| `organization` | object | ✅ | Organization info (`name`, `url`) |
+| `version` | string | ✅ | Service version |
+| `description` | string | ❌ | Human-readable description |
+| `environment` | string | ❌ | Deployment environment (e.g. `production`, `staging`) |
+| `contactUrl` | string | ❌ | Contact URL or mailto |
+| `documentationUrl` | string | ❌ | Documentation URL |
+| `createdAt` | string | ❌ | ISO 8601 creation timestamp |
+| `updatedAt` | string | ❌ | ISO 8601 last update timestamp |
 
-::: sidecar.core.provider
+### Example Response
+
+```json
+{
+  "id": "org.ga4gh.myinstitute.drs",
+  "name": "My Institute DRS",
+  "type": {
+    "group": "org.ga4gh",
+    "artifact": "drs",
+    "version": "1.4.0"
+  },
+  "organization": {
+    "name": "My Research Institute",
+    "url": "https://myinstitute.org"
+  },
+  "version": "1.2.0",
+  "description": "DRS service for genomic data access.",
+  "environment": "production"
+}
+```
+
+---
+
+## `GET /healthz`
+
+Kubernetes **liveness probe**. Returns `200 OK` if the process is alive.
+
+### Response
+
+```json
+{
+  "status": "ok"
+}
+```
+
+---
+
+## `GET /readyz`
+
+Kubernetes **readiness probe**. Returns `200 OK` if the service is ready to accept traffic. In Phase 2, this will also verify that configuration has been loaded successfully.
+
+### Response
+
+```json
+{
+  "status": "ready"
+}
+```
+
+---
+
+## Error Responses
+
+| Status Code | Meaning |
+|---|---|
+| `405 Method Not Allowed` | Non-GET request to any endpoint |
+| `500 Internal Server Error` | JSON encoding failure (should not happen in practice) |

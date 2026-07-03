@@ -1,9 +1,9 @@
-# GA4GH ServiceInfo Sidecar Default Configuration
-# This file provides the actual values returned by GET /service-info.
+# GA4GH ServiceInfo Sidecar — Default Configuration
+# This file provides the metadata returned by GET /service-info.
 # Field order and names follow the GA4GH ServiceInfo v1 specification:
 # https://github.com/ga4gh-discovery/ga4gh-service-info
 
-# --- Required fields (from GA4GH spec) ---
+# --- Required fields ---
 
 id: "org.ga4gh.serviceinfo-sidecar"
 
@@ -22,10 +22,10 @@ version: "0.1.0"
 
 # --- Optional fields ---
 
-description: "A reusable sidecar service for standardizing GA4GH ServiceInfo metadata."
+description: "A reusable sidecar for standardizing GA4GH ServiceInfo metadata."
 environment: "dev"
 
-# contactUrl:    "https://..."        # optional — contact form or mailto:
-# documentationUrl: "https://..."    # optional — docs URL
-# createdAt:     "2026-06-01T00:00:00Z"   # optional — ISO 8601
-# updatedAt:     "2026-06-11T00:00:00Z"   # optional — ISO 8601
+# contactUrl:        "https://..."
+# documentationUrl:  "https://..."
+# createdAt:         "2026-06-01T00:00:00Z"
+# updatedAt:         "2026-07-03T00:00:00Z"
