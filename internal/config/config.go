@@ -29,6 +29,12 @@ func Load(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file %q: %w", configPath, err)
 	}
 
+	if serviceInfo.ID == "" || serviceInfo.Name == "" || serviceInfo.Version == "" ||
+		serviceInfo.Type.Group == "" || serviceInfo.Type.Artifact == "" || serviceInfo.Type.Version == "" ||
+		serviceInfo.Organization.Name == "" || serviceInfo.Organization.URL == "" {
+		return nil, fmt.Errorf("invalid serviceInfo in %q: missing required fields", configPath)
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

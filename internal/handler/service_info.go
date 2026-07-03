@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 
@@ -16,11 +17,14 @@ func ServiceInfoHandler(info model.ServiceInfo) http.HandlerFunc {
 			return
 		}
 
+		var buf bytes.Buffer
+		if err := json.NewEncoder(&buf).Encode(info); err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-
-		if err := json.NewEncoder(w).Encode(info); err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-		}
+		_, _ = w.Write(buf.Bytes())
 	}
 }
