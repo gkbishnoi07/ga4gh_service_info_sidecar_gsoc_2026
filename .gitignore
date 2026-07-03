@@ -1,33 +1,13 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-*.pyc
+# Go binary output
+/sidecar
+*.exe
 
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
+# Go vendor (if used)
+vendor/
 
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
-*.egg
-.eggs/
-
-# Pytest / coverage
-.pytest_cache/
-.coverage
-coverage.xml
-htmlcov/
-
-# Mypy
-.mypy_cache/
-
-# Ruff
-.ruff_cache/
+# Test coverage
+coverage.out
+coverage.html
 
 # Environment variables
 .env
@@ -54,3 +34,11 @@ Thumbs.db
 
 # MkDocs build directory
 site/
+
+# Legacy Python (safe to keep for local cleanup)
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
