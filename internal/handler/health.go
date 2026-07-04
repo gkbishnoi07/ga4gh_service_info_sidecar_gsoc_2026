@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/config"
 )
 
 // healthResponse is the JSON payload for health check endpoints.
@@ -26,12 +28,16 @@ func HealthzHandler() http.HandlerFunc {
 }
 
 // ReadyzHandler returns an HTTP handler for the readiness probe.
-// Always returns 200 with {"status": "ready"}.
-// Phase 2 will check config-loaded state before reporting ready.
-func ReadyzHandler() http.HandlerFunc {
+// It checks the ConfigWatcher and only returns 200 if the config has been loaded successfully.
+func ReadyzHandler(watcher *config.ConfigWatcher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if !watcher.IsReady() {
+			http.Error(w, `{"status":"not ready"}`, http.StatusServiceUnavailable)
 			return
 		}
 

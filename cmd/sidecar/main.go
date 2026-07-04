@@ -2,35 +2,48 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/config"
 	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/handler"
 )
 
 func main() {
-	configPath := flag.String("config", "configs/service_info.yaml", "Path to the configuration YAML file")
-	flag.Parse()
+	// 1. Initialize structured logging
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
-	cfg, err := config.Load(*configPath)
-	if err != nil {
-		log.Fatalf("Configuration error: %v", err)
+	// 2. Read configuration path from environment variable fallback to local dummy config
+	configPath := os.Getenv("SIDECAR_CONFIG_PATH")
+	if configPath == "" {
+		configPath = "./configs/dummy_service_info.yaml"
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/service-info", handler.ServiceInfoHandler(cfg.ServiceInfo))
-	mux.HandleFunc("/healthz", handler.HealthzHandler())
-	mux.HandleFunc("/readyz", handler.ReadyzHandler())
+	// 3. Initialize the config watcher (synchronous initial load)
+	watcher, err := config.NewWatcher(configPath)
+	if err != nil {
+		slog.Error("Failed to initialize sidecar configuration", "error", err)
+		os.Exit(1)
+	}
 
+	// 4. Start the background fsnotify hot-reload goroutine
+	go watcher.Watch(configPath)
+
+	// 5. Wire up the HTTP handlers
+	mux := http.NewServeMux()
+	mux.HandleFunc("/service-info", handler.ServiceInfoHandler(watcher))
+	mux.HandleFunc("/healthz", handler.HealthzHandler())
+	mux.HandleFunc("/readyz", handler.ReadyzHandler(watcher))
+
+	// 6. Start the server
+	cfg := watcher.GetConfig()
 	addr := fmt.Sprintf(":%s", cfg.Port)
-	log.Printf("GA4GH ServiceInfo Sidecar starting on %s", addr)
-	log.Printf("Using config file: %s", *configPath)
-	log.Printf("Endpoints: GET /service-info, GET /healthz, GET /readyz")
+	slog.Info("GA4GH ServiceInfo Sidecar starting", "port", cfg.Port, "config_path", configPath)
 
 	if err := http.ListenAndServe(addr, mux); err != nil {
-		log.Fatalf("Server failed: %v", err)
+		slog.Error("HTTP server failed", "error", err)
+		os.Exit(1)
 	}
 }
