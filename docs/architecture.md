@@ -35,7 +35,7 @@ This happens because **updating this data requires a code change, a code review,
 The sidecar is a **standalone Go service** deployed as its own Pod in Kubernetes. It:
 
 1. **Serves** `GET /service-info` with operator-managed metadata from a YAML ConfigMap.
-2. **Validates** the metadata against the GA4GH ServiceInfo v1 specification.
+2. **Validates** the metadata against the GA4GH ServiceInfo v1 specification on every load.
 3. **Hot-reloads** when the ConfigMap is updated — zero restart, zero downtime.
 4. **Exposes** `/healthz` and `/readyz` endpoints for Kubernetes probes.
 5. **Never touches** the real GA4GH service — no proxying, no coupling, no blast radius.
@@ -47,20 +47,20 @@ The Kubernetes **Ingress controller** (which already exists in every production 
 ## 3. High-Level Architecture
 
 ```
-                           ┌─────────────────────┐
-                           │   Kubernetes Ingress │
-                           │                       │
-External Traffic           │  /service-info ──────┼──▶ Sidecar Pod (:8080)
-─────────────────────────▶ │                       │    (Go binary, ~10MB)
-   :443 (HTTPS)            │  /* (everything else)┼──▶ GA4GH Service Pod
-                           │                       │    (DRS/TES/WES/TRS)
-                           └─────────────────────┘
+                           ┌────────────────────────────────┐
+                           │       Kubernetes Ingress       │
+                           │                                │
+External Traffic           │  /service-info ────────────────┼──▶ Sidecar Pod (:8080)
+─────────────────────────▶ │                                  │      Go binary, ~10MB
+   :443 (HTTPS)            │  /* (everything else) ─────────┼──▶ GA4GH Service Pod
+                           │                                  │      (DRS/TES/WES/TRS)
+                           └────────────────────────────────┘
 
-                           ┌─────────────────────┐
-                           │  ConfigMap           │
-                           │  (mounted as volume) │
-                           │  Watched by fsnotify │
-                           └─────────────────────┘
+                           ┌────────────────────────────────┐
+                           │  ConfigMap                     │
+                           │  (mounted as volume)           │
+                           │  Watched by fsnotify           │
+                           └────────────────────────────────┘
 ```
 
 ### Key Properties
@@ -76,17 +76,17 @@ External Traffic           │  /service-info ──────┼──▶ Sid
 
 ---
 
-## 4. Why Not a Reverse Proxy?
+## 4. Why Ingress Routing?
 
 An earlier design routed **100% of all traffic** through the sidecar as a reverse proxy, just to intercept the 1–5% of requests that hit `/service-info`. That approach had fundamental problems:
 
 | Concern | Reverse Proxy | Ingress Routing (current) |
 |---|---|---|
 | Blast radius | Sidecar crash kills ALL traffic | Only `/service-info` is affected |
-| Traffic overhead | Every request proxied through Python | Only metadata requests hit sidecar |
-| Footprint | ~100MB (Python + pip + venv) | ~10MB (Go static binary) |
+| Traffic overhead | Every request proxied through sidecar | Only metadata requests hit sidecar |
+| Footprint | Heavy runtime + dependencies | ~10MB (Go static binary) |
 | Integration effort | Restructure entire Pod | Add one Ingress rule |
-| Coupling | Sidecar + DRS in same Pod | Completely independent Pods |
+| Coupling | Sidecar + service in same Pod | Completely independent Pods |
 
 The Ingress routing pattern solves a small problem with a small solution.
 
@@ -129,9 +129,13 @@ Users add **one Ingress rule**. That's the entire integration change.
 
 ---
 
-## 6. Configuration
+## 6. Configuration Architecture
 
-All metadata lives in a YAML file mounted from a Kubernetes ConfigMap:
+All metadata lives in a YAML file. In production, this file is mounted from a Kubernetes ConfigMap. For local development, a dummy config file is included in the repository.
+
+The config file path is controlled by the `SIDECAR_CONFIG_PATH` environment variable. If unset, it falls back to `./configs/dummy_service_info.yaml`.
+
+### Example Configuration
 
 ```yaml
 id: "org.ga4gh.myinstitute.drs"
@@ -150,9 +154,19 @@ description: "DRS service for genomic data access."
 
 No operational settings mixed in — the YAML is **pure metadata**. Deployment topology is handled by Kubernetes manifests.
 
+### GA4GH Schema Validation
+
+On every load (initial startup and hot-reload), the sidecar validates that the following required fields are present and non-empty:
+
+- `id`, `name`, `version`
+- `type.group`, `type.artifact`, `type.version`
+- `organization.name`, `organization.url`
+
+If any required field is missing, the sidecar **rejects the configuration** and retains the previously loaded valid config. It never crashes or serves invalid metadata.
+
 ---
 
-## 7. Hot Reload *(Phase 2)*
+## 7. Hot Reload Architecture
 
 When a ConfigMap is updated, Kubernetes performs an **atomic symlink swap** on the mounted directory. The sidecar detects this using `fsnotify` and reloads configuration atomically:
 
@@ -175,6 +189,13 @@ sync.RWMutex atomic config swap (old config kept on bad YAML)
 Next request sees updated values — zero downtime
 ```
 
+### Implementation Details
+
+- **Directory watching**: `fsnotify` watches the *directory* containing the config file, not the file itself. This is required because Kubernetes ConfigMap updates work via symlink swaps — the file inode changes, so watching the file directly would miss the update.
+- **Thread safety**: A `sync.RWMutex` protects the config pointer. HTTP handlers acquire a read lock (`RLock`), while the reload goroutine acquires a write lock (`Lock`) only during the brief pointer swap.
+- **Failure safety**: If the new YAML is invalid (missing fields, bad syntax), the reload is rejected with a structured log error. The sidecar continues serving the previous valid configuration.
+- **Structured logging**: All reload events are logged via Go's `log/slog` package with JSON output, making them compatible with cloud-native observability stacks.
+
 ---
 
 ## 8. Endpoints
@@ -182,8 +203,8 @@ Next request sees updated values — zero downtime
 | Endpoint | Method | Purpose |
 |---|---|---|
 | `/service-info` | GET | GA4GH ServiceInfo JSON response |
-| `/healthz` | GET | Kubernetes liveness probe |
-| `/readyz` | GET | Kubernetes readiness probe |
+| `/healthz` | GET | Kubernetes liveness probe — always returns `200 OK` |
+| `/readyz` | GET | Kubernetes readiness probe — returns `200 OK` only after config is loaded |
 
 ---
 
@@ -193,10 +214,11 @@ Next request sees updated values — zero downtime
 ga4gh_service_info_sidecar_gsoc_2026/
 ├── cmd/
 │   └── sidecar/
-│       └── main.go                  ← Entrypoint: HTTP server on :8080
+│       └── main.go                  ← Entrypoint: HTTP server, slog, fsnotify
 ├── internal/
 │   ├── config/
-│   │   └── config.go               ← Config loading (YAML + env vars)
+│   │   ├── config.go               ← ConfigWatcher, fsnotify, RWMutex, validation
+│   │   └── config_test.go          ← Config loading and validation tests
 │   ├── handler/
 │   │   ├── service_info.go          ← GET /service-info handler
 │   │   ├── health.go                ← GET /healthz, /readyz handlers
@@ -205,7 +227,7 @@ ga4gh_service_info_sidecar_gsoc_2026/
 │   └── model/
 │       └── service_info.go          ← GA4GH ServiceInfo Go structs
 ├── configs/
-│   └── service_info.yaml            ← Example config (metadata only)
+│   └── dummy_service_info.yaml      ← Dummy config for local development
 ├── docs/                            ← MkDocs documentation
 ├── .github/workflows/               ← CI (Go vet, test, build)
 ├── go.mod
@@ -218,8 +240,7 @@ ga4gh_service_info_sidecar_gsoc_2026/
 
 | Phase | Feature | Status |
 |---|---|---|
-| **Phase 0** | Repo setup — Go module, basic HTTP server, hardcoded JSON | ✅ Done |
-| **Phase 1** | YAML config loading, GA4GH schema validation, unit tests | 📋 Planned |
-| **Phase 2** | fsnotify hot reload, RWMutex atomic swap, structured logging | 📋 Planned |
-| **Phase 3** | Dockerfile, K8s manifests, Ingress rule, Minikube testing | 📋 Planned |
-| **Phase 4** | Helm chart, GitHub Actions CI/CD, docs, quickstart guide | 📋 Planned |
+| **Phase 0** | Go module, HTTP server, GA4GH JSON response, unit tests | ✅ Done |
+| **Phase 1** | YAML config loading, GA4GH schema validation, fsnotify hot reload, structured logging (`slog`) | ✅ Done |
+| **Phase 2** | Dockerfile, K8s manifests, Ingress rule, Minikube testing | 📋 Planned |
+| **Phase 3** | Helm chart, GitHub Actions CI/CD, quickstart guide | 📋 Planned |

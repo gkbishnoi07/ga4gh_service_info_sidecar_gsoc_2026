@@ -1,0 +1,19 @@
+id: "org.ga4gh.serviceinfo-sidecar"
+
+name: "Dummy GA4GH ServiceInfo Sidecar"
+
+type:
+  group: "org.ga4gh"
+  artifact: "service-info"
+  version: "1.0.0"
+
+organization:
+  name: "GA4GH"
+  url: "https://www.ga4gh.org"
+
+version: "9.9.9"
+
+# --- Optional fields ---
+
+description: "A reusable sidecar for standardizing GA4GH ServiceInfo metadata."
+environment: "dev"

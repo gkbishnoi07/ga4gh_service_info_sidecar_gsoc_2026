@@ -63,7 +63,7 @@ Kubernetes **liveness probe**. Returns `200 OK` if the process is alive.
 
 ## `GET /readyz`
 
-Kubernetes **readiness probe**. Returns `200 OK` if the service is ready to accept traffic. In Phase 2, this will also verify that configuration has been loaded successfully.
+Kubernetes **readiness probe**. Returns `200 OK` only after configuration has been successfully loaded. If the initial config load fails, this endpoint returns `503 Service Unavailable` to prevent Kubernetes from routing traffic to a broken pod.
 
 ### Response
 
