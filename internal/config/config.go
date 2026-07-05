@@ -69,9 +69,19 @@ func (cw *ConfigWatcher) reload(configPath string) error {
 		return fmt.Errorf("invalid serviceInfo in %q: missing required fields", configPath)
 	}
 
-	port := os.Getenv("PORT")
+	// Maintain the original port if already loaded, otherwise read env var
+	var port string
+	cw.mu.RLock()
+	if cw.loaded {
+		port = cw.config.Port
+	}
+	cw.mu.RUnlock()
+
 	if port == "" {
-		port = "8080"
+		port = os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
 	}
 
 	newConfig := &Config{
@@ -112,9 +122,9 @@ func (cw *ConfigWatcher) Watch(configPath string) {
 				return
 			}
 
-			// React to any write/create in the directory — this catches both
-			// direct file edits and Kubernetes symlink swaps.
-			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
+			// React to any event except purely Chmod — this catches both
+			// direct file edits and Kubernetes symlink swaps (Rename/Remove).
+			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) || event.Has(fsnotify.Rename) || event.Has(fsnotify.Remove) {
 				slog.Info("Detected configuration change, reloading...", "event", event.Name, "config", configPath)
 				if err := cw.reload(configPath); err != nil {
 					slog.Error("Failed to reload configuration (keeping previous)", "error", err)
