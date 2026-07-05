@@ -37,7 +37,9 @@ func ReadyzHandler(watcher *config.ConfigWatcher) http.HandlerFunc {
 		}
 
 		if !watcher.IsReady() {
-			http.Error(w, `{"status":"not ready"}`, http.StatusServiceUnavailable)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			json.NewEncoder(w).Encode(healthResponse{Status: "not ready"}) //nolint:errcheck
 			return
 		}
 

@@ -34,8 +34,10 @@ func setupMockWatcher(t *testing.T) *config.ConfigWatcher {
 			"name": "GA4GH",
 			"url":  "https://www.ga4gh.org",
 		},
-		"description": "Test description",
-		"environment": "test",
+		"description":      "Test description",
+		"environment":      "test",
+		"contactUrl":       "https://contact.example.com",
+		"documentationUrl": "https://docs.example.com",
 	}
 
 	data, err := yaml.Marshal(mockConfig)
@@ -100,6 +102,14 @@ func TestServiceInfoHandler_ValidJSON(t *testing.T) {
 
 	if result["id"] != "org.ga4gh.test" {
 		t.Errorf("expected id %q, got %q", "org.ga4gh.test", result["id"])
+	}
+
+	// Verify camelCase keys from GA4GH spec are present
+	if result["contactUrl"] != "https://contact.example.com" {
+		t.Errorf("expected contactUrl %q, got %q", "https://contact.example.com", result["contactUrl"])
+	}
+	if result["documentationUrl"] != "https://docs.example.com" {
+		t.Errorf("expected documentationUrl %q, got %q", "https://docs.example.com", result["documentationUrl"])
 	}
 }
 

@@ -36,8 +36,13 @@ func setupMockWatcherForHealth(t *testing.T) *config.ConfigWatcher {
 		},
 	}
 
-	data, _ := yaml.Marshal(mockConfig)
-	os.WriteFile(configPath, data, 0644)
+	data, err := yaml.Marshal(mockConfig)
+	if err != nil {
+		t.Fatalf("failed to marshal mock config: %v", err)
+	}
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		t.Fatalf("failed to write mock config file: %v", err)
+	}
 
 	watcher, err := config.NewWatcher(configPath)
 	if err != nil {
@@ -73,7 +78,9 @@ func TestReadyzHandler_ReturnsOK(t *testing.T) {
 	}
 
 	var result map[string]string
-	json.NewDecoder(rec.Body).Decode(&result)
+	if err := json.NewDecoder(rec.Body).Decode(&result); err != nil {
+		t.Fatalf("response is not valid JSON: %v", err)
+	}
 
 	if result["status"] != "ready" {
 		t.Errorf("expected status 'ready', got %q", result["status"])
