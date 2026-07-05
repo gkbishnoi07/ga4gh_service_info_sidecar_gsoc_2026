@@ -17,6 +17,11 @@ func ServiceInfoHandler(watcher *config.ConfigWatcher) http.HandlerFunc {
 			return
 		}
 
+		if watcher == nil {
+			http.Error(w, "Service unavailable", http.StatusServiceUnavailable)
+			return
+		}
+
 		cfg := watcher.GetConfig()
 		if cfg == nil {
 			http.Error(w, "Service unavailable", http.StatusServiceUnavailable)
