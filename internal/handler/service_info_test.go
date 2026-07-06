@@ -126,3 +126,15 @@ func TestServiceInfoHandler_RejectsPost(t *testing.T) {
 		t.Errorf("expected status 405 for POST, got %d", rec.Code)
 	}
 }
+
+func TestServiceInfoHandler_Returns503OnNilWatcher(t *testing.T) {
+	h := handler.ServiceInfoHandler(nil)
+	req := httptest.NewRequest(http.MethodGet, "/service-info", nil)
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("expected status 503, got %d", rec.Code)
+	}
+}
