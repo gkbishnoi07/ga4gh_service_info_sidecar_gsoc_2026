@@ -86,3 +86,29 @@ func TestReadyzHandler_ReturnsOK(t *testing.T) {
 		t.Errorf("expected status 'ready', got %q", result["status"])
 	}
 }
+
+func TestReadyzHandler_Returns503OnNilWatcher(t *testing.T) {
+	h := handler.ReadyzHandler(nil)
+	req := httptest.NewRequest(http.MethodGet, "/readyz", nil)
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("expected status 503, got %d", rec.Code)
+	}
+}
+
+func TestReadyzHandler_RejectsPost(t *testing.T) {
+	watcher := setupMockWatcherForHealth(t)
+	h := handler.ReadyzHandler(watcher)
+
+	req := httptest.NewRequest(http.MethodPost, "/readyz", nil)
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected status 405 for POST, got %d", rec.Code)
+	}
+}

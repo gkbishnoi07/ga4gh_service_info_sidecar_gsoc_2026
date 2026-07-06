@@ -14,11 +14,11 @@ func writeTempConfig(t *testing.T, data map[string]interface{}) string {
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
 
-	bytes, err := yaml.Marshal(data)
+	yamlBytes, err := yaml.Marshal(data)
 	if err != nil {
 		t.Fatalf("failed to marshal test config: %v", err)
 	}
-	if err := os.WriteFile(configPath, bytes, 0644); err != nil {
+	if err := os.WriteFile(configPath, yamlBytes, 0644); err != nil {
 		t.Fatalf("failed to write test config file: %v", err)
 	}
 	return configPath
@@ -71,7 +71,9 @@ func TestNewWatcher_FailsOnMissingFields(t *testing.T) {
 func TestNewWatcher_FailsOnBadYAML(t *testing.T) {
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
-	os.WriteFile(configPath, []byte("bad: yaml: content: {"), 0644)
+	if err := os.WriteFile(configPath, []byte("bad: yaml: content: {"), 0644); err != nil {
+		t.Fatalf("failed to write bad config file: %v", err)
+	}
 
 	_, err := config.NewWatcher(configPath)
 	if err == nil {
