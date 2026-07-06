@@ -36,7 +36,7 @@ func ReadyzHandler(watcher *config.ConfigWatcher) http.HandlerFunc {
 			return
 		}
 
-		if watcher == nil || !watcher.IsReady() {
+		if watcher == nil || !watcher.IsReady() || watcher.HasFatalError() {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusServiceUnavailable)
 			json.NewEncoder(w).Encode(healthResponse{Status: "not ready"}) //nolint:errcheck

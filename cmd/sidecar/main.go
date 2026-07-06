@@ -2,10 +2,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/config"
 	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/handler"
@@ -28,8 +33,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Setup context that cancels on SIGTERM or SIGINT for graceful shutdown
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// 4. Start the background fsnotify hot-reload goroutine
-	go watcher.Watch(configPath)
+	go watcher.Watch(ctx, configPath)
 
 	// 5. Wire up the HTTP handlers
 	mux := http.NewServeMux()
@@ -40,10 +49,31 @@ func main() {
 	// 6. Start the server
 	cfg := watcher.GetConfig()
 	addr := fmt.Sprintf(":%s", cfg.Port)
+	server := &http.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
+
 	slog.Info("GA4GH ServiceInfo Sidecar starting", "port", cfg.Port, "config_path", configPath)
 
-	if err := http.ListenAndServe(addr, mux); err != nil {
-		slog.Error("HTTP server failed", "error", err)
-		os.Exit(1)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("HTTP server failed", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	// Wait for interrupt signal
+	<-ctx.Done()
+	slog.Info("Shutting down gracefully, press Ctrl+C again to force")
+
+	// Create a timeout context for the shutdown
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		slog.Error("HTTP server shutdown error", "error", err)
 	}
+
+	slog.Info("Server exited")
 }

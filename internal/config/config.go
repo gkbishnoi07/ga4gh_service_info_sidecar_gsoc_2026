@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -20,9 +21,10 @@ type Config struct {
 
 // ConfigWatcher safely manages the sidecar configuration with hot-reload support.
 type ConfigWatcher struct {
-	mu     sync.RWMutex
-	config *Config
-	loaded bool
+	mu       sync.RWMutex
+	config   *Config
+	loaded   bool
+	fatalErr error
 }
 
 // NewWatcher initializes a ConfigWatcher and performs an initial synchronous load.
@@ -41,6 +43,13 @@ func (cw *ConfigWatcher) GetConfig() *Config {
 	cw.mu.RLock()
 	defer cw.mu.RUnlock()
 	return cw.config
+}
+
+// HasFatalError returns true if the watcher encountered a terminal error and stopped functioning.
+func (cw *ConfigWatcher) HasFatalError() bool {
+	cw.mu.RLock()
+	defer cw.mu.RUnlock()
+	return cw.fatalErr != nil
 }
 
 // IsReady returns true if the configuration has been successfully loaded at least once.
@@ -97,10 +106,12 @@ func (cw *ConfigWatcher) reload(configPath string) error {
 	return nil
 }
 
-// Watch runs in a background goroutine and listens for file modifications.
-func (cw *ConfigWatcher) Watch(configPath string) {
+func (cw *ConfigWatcher) Watch(ctx context.Context, configPath string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
+		cw.mu.Lock()
+		cw.fatalErr = fmt.Errorf("failed to create fsnotify watcher: %w", err)
+		cw.mu.Unlock()
 		slog.Error("Failed to create fsnotify watcher", "error", err)
 		return
 	}
@@ -109,6 +120,9 @@ func (cw *ConfigWatcher) Watch(configPath string) {
 	// Watch the DIRECTORY, not the file, to survive Kubernetes symlink swaps.
 	dir := filepath.Dir(configPath)
 	if err := watcher.Add(dir); err != nil {
+		cw.mu.Lock()
+		cw.fatalErr = fmt.Errorf("failed to watch config directory: %w", err)
+		cw.mu.Unlock()
 		slog.Error("Failed to watch config directory", "dir", dir, "error", err)
 		return
 	}
@@ -117,6 +131,9 @@ func (cw *ConfigWatcher) Watch(configPath string) {
 
 	for {
 		select {
+		case <-ctx.Done():
+			slog.Info("Shutting down configuration watcher")
+			return
 		case event, ok := <-watcher.Events:
 			if !ok {
 				return
@@ -136,7 +153,11 @@ func (cw *ConfigWatcher) Watch(configPath string) {
 			if !ok {
 				return
 			}
-			slog.Error("fsnotify watcher error", "error", err)
+			cw.mu.Lock()
+			cw.fatalErr = err
+			cw.mu.Unlock()
+			slog.Error("fsnotify watcher fatal error", "error", err)
+			return
 		}
 	}
 }
