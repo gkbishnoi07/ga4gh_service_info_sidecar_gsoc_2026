@@ -1,0 +1,24 @@
+# Version control
+.git
+.github
+.gitignore
+
+# Go build files
+sidecar
+bin/
+*.exe
+
+# Documentation
+docs/
+site/
+mkdocs.yml
+requirements-docs.txt
+
+# IDEs and workspace tools
+.idea/
+.vscode/
+.agents/
+
+# Deployment manifests (unneeded for container build)
+deploy/
+k8s/
