@@ -1,0 +1,29 @@
+# ==============================================================================
+# EXAMPLE INGRESS ROUTING SNIPPET
+#
+# WARNING: DO NOT apply this file directly to your cluster unless you want to 
+# create a separate standalone Ingress resource for 'genomics-api.example.com'.
+#
+# Standard Usage:
+# Copy the path block under rules[0].http.paths and paste it under the rules 
+# section of your existing parent service's (e.g. DRS/TES/TRS) Ingress manifest.
+# The sidecar path rule MUST be placed above the main API routing rules.
+# ==============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ga4gh-sidecar-ingress
+spec:
+  rules:
+  - host: genomics-api.example.com
+    http:
+      paths:
+      # --- COPY AND PASTE THIS PATH RULE INTO YOUR MAIN INGRESS ---
+      - path: /ga4gh/drs/v1/service-info
+        pathType: Exact
+        backend:
+          service:
+            name: ga4gh-sidecar
+            port:
+              number: 8080
+

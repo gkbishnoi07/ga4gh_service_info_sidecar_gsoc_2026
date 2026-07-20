@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ga4gh-sidecar
+spec:
+  selector:
+    app: ga4gh-sidecar
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP

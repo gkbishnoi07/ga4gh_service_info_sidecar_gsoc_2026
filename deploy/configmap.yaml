@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-info-config
+data:
+  service_info.yaml: |
+    id: "org.ga4gh.service-info-sidecar"
+    name: "GA4GH Service Info Sidecar"
+    type:
+      group: "org.ga4gh"
+      artifact: "service-info"
+      version: "1.0.0"
+    description: "Sidecar for exposing GA4GH-compliant metadata from configuration files."
+    organization:
+      name: "Global Alliance for Genomics and Health"
+      url: "https://www.ga4gh.org"
+    contactUrl: "mailto:support@ga4gh.org"
+    documentationUrl: "https://github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026"
+    environment: "production"
+    version: "1.0.0"
