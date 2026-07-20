@@ -138,3 +138,17 @@ func TestServiceInfoHandler_Returns503OnNilWatcher(t *testing.T) {
 		t.Errorf("expected status 503, got %d", rec.Code)
 	}
 }
+
+func TestServiceInfoHandler_Returns503OnUnreadyWatcher(t *testing.T) {
+	watcher := &config.ConfigWatcher{}
+	h := handler.ServiceInfoHandler(watcher)
+
+	req := httptest.NewRequest(http.MethodGet, "/service-info", nil)
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("expected status 503, got %d", rec.Code)
+	}
+}
