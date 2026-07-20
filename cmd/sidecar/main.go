@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
-    "sync"
 
 	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/config"
 	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/handler"
@@ -115,7 +115,7 @@ func main() {
 		slog.Error("Metrics server shutdown error", "error", err)
 	}
 
-    // Wait for both servers to stop
-    wg.Wait()
+	// Wait for both servers to stop
+	wg.Wait()
 	slog.Info("Server exited")
 }

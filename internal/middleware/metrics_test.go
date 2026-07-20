@@ -57,6 +57,3 @@ func TestMetricsMiddleware(t *testing.T) {
 		t.Errorf("expected label pattern %q in scrape body, got:\n%s", expectedLabel, scrapeBody)
 	}
 }
-
-
-
