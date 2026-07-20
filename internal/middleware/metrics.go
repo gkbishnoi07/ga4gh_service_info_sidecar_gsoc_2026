@@ -67,6 +67,3 @@ func MetricsMiddleware(next http.Handler) http.Handler {
 		httpRequestDuration.WithLabelValues(path, r.Method).Observe(duration)
 	})
 }
-
-
-
