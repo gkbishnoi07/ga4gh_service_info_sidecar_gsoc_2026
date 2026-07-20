@@ -11,9 +11,12 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+    "sync"
 
 	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/config"
 	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/handler"
+	"github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/internal/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -40,25 +43,59 @@ func main() {
 	// 4. Start the background fsnotify hot-reload goroutine
 	go watcher.Watch(ctx, configPath)
 
-	// 5. Wire up the HTTP handlers
-	mux := http.NewServeMux()
-	mux.HandleFunc("/service-info", handler.ServiceInfoHandler(watcher))
-	mux.HandleFunc("/healthz", handler.HealthzHandler())
-	mux.HandleFunc("/readyz", handler.ReadyzHandler(watcher))
+	// 5. Wire up the HTTP handlers for the main server (port 8080)
+	mainMux := http.NewServeMux()
+	mainMux.HandleFunc("/service-info", handler.ServiceInfoHandler(watcher))
+	mainMux.HandleFunc("/healthz", handler.HealthzHandler())
+	mainMux.HandleFunc("/readyz", handler.ReadyzHandler(watcher))
 
-	// 6. Start the server
+	// Apply CORS and metrics middleware globally to the main server
+	var globalHandler http.Handler = mainMux
+	globalHandler = middleware.MetricsMiddleware(globalHandler)
+	globalHandler = middleware.CORSMiddleware(globalHandler)
+
+	// 6. Set up the main application server
 	cfg := watcher.GetConfig()
-	addr := fmt.Sprintf(":%s", cfg.Port)
-	server := &http.Server{
-		Addr:    addr,
-		Handler: mux,
+	mainAddr := fmt.Sprintf(":%s", cfg.Port)
+	mainServer := &http.Server{
+		Addr:         mainAddr,
+		Handler:      globalHandler,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
-	slog.Info("GA4GH ServiceInfo Sidecar starting", "port", cfg.Port, "config_path", configPath)
+	// 7. Set up the private metrics server (port 9090)
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("/metrics", promhttp.Handler())
+	metricsServer := &http.Server{
+		Addr:         ":9090",
+		Handler:      metricsMux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
 
+	slog.Info("GA4GH ServiceInfo Sidecar starting", "port", cfg.Port, "metrics_port", "9090", "config_path", configPath)
+
+	var wg sync.WaitGroup
+
+	// Start main server
+	wg.Add(1)
 	go func() {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			slog.Error("HTTP server failed", "error", err)
+		defer wg.Done()
+		if err := mainServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("Main HTTP server failed", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	// Start metrics server
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("Metrics HTTP server failed", "error", err)
 			os.Exit(1)
 		}
 	}()
@@ -71,9 +108,14 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		slog.Error("HTTP server shutdown error", "error", err)
+	if err := mainServer.Shutdown(shutdownCtx); err != nil {
+		slog.Error("Main server shutdown error", "error", err)
+	}
+	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+		slog.Error("Metrics server shutdown error", "error", err)
 	}
 
+    // Wait for both servers to stop
+    wg.Wait()
 	slog.Info("Server exited")
 }
