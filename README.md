@@ -37,7 +37,7 @@ Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The SERVICE 
 
 2. **Run Local Server:**
    ```bash
-   go run ./cmd/SERVICE
+   go run ./cmd/server
    ```
    *The server will start on port `8080` using a local dummy config path fallback.*
 
