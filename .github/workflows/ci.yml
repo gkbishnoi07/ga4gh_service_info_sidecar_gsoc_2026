@@ -8,58 +8,78 @@ on:
 
 jobs:
   lint:
-    name: Lint & Vet
+    name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
+      - uses: actions/checkout@v4
+      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-
-      - name: Run go vet
-        run: go vet ./...
-
-      - name: Check formatting
-        run: |
-          unformatted=$(gofmt -l .)
-          if [ -n "$unformatted" ]; then
-            echo "Error: The following files are not formatted:"
-            echo "$unformatted"
-            exit 1
-          fi
+          
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.59
 
   test:
-    name: Tests
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
+      - uses: actions/checkout@v4
+      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-
+          
       - name: Run tests
         run: go test ./... -v -race -coverprofile=coverage.out
-
+        
       - name: Upload coverage report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage.out
 
-  build:
-    name: Build
+  build-and-e2e:
+    name: Docker Build & E2E
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
+      
+      - name: Build Docker image
+        run: docker build -t ga4gh-service-info:latest .
+        
+      - name: Run Docker container (Background)
+        run: |
+          docker run -d --name ga4gh-service -p 8080:8080 -p 9090:9090 ga4gh-service-info:latest
+          # Wait for the service to start
+          sleep 5
+          
+      - name: Test /healthz endpoint
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/healthz)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Healthz endpoint failed with status $STATUS"
+            exit 1
+          fi
+          
+      - name: Test /service-info endpoint
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/service-info)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Service-info endpoint failed with status $STATUS"
+            exit 1
+          fi
+          # Verify valid JSON
+          curl -s http://localhost:8080/service-info | jq . > /dev/null
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-
-      - name: Build binary
-        run: go build -o /dev/null ./cmd/server
+      - name: Test /metrics endpoint (Port 9090)
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:9090/metrics)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Metrics endpoint failed with status $STATUS"
+            exit 1
+          fi
