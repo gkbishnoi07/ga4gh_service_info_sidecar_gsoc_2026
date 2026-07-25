@@ -4,7 +4,7 @@
 .gitignore
 
 # Go build files
-sidecar
+SERVICE
 bin/
 *.exe
 

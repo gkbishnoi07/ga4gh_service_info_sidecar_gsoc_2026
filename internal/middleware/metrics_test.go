@@ -43,16 +43,16 @@ func TestMetricsMiddleware(t *testing.T) {
 	scrapeBody := scrapeRec.Body.String()
 
 	// Verify our custom metrics are present in the Prometheus output
-	if !strings.Contains(scrapeBody, "ga4gh_sidecar_http_requests_total") {
-		t.Errorf("expected 'ga4gh_sidecar_http_requests_total' metric in scrape body, got:\n%s", scrapeBody)
+	if !strings.Contains(scrapeBody, "ga4gh_SERVICE_http_requests_total") {
+		t.Errorf("expected 'ga4gh_SERVICE_http_requests_total' metric in scrape body, got:\n%s", scrapeBody)
 	}
 
-	if !strings.Contains(scrapeBody, "ga4gh_sidecar_http_request_duration_seconds") {
-		t.Errorf("expected 'ga4gh_sidecar_http_request_duration_seconds' metric in scrape body")
+	if !strings.Contains(scrapeBody, "ga4gh_SERVICE_http_request_duration_seconds") {
+		t.Errorf("expected 'ga4gh_SERVICE_http_request_duration_seconds' metric in scrape body")
 	}
 
 	// Verify the request details are tracked in the metrics format
-	expectedLabel := `ga4gh_sidecar_http_requests_total{method="POST",path="/test-path",status="201"} 1`
+	expectedLabel := `ga4gh_SERVICE_http_requests_total{method="POST",path="/test-path",status="201"} 1`
 	if !strings.Contains(scrapeBody, expectedLabel) {
 		t.Errorf("expected label pattern %q in scrape body, got:\n%s", expectedLabel, scrapeBody)
 	}

@@ -1,6 +1,6 @@
-id: "org.ga4gh.serviceinfo-sidecar"
+id: "org.ga4gh.serviceinfo-SERVICE"
 
-name: "Dummy GA4GH ServiceInfo Sidecar"
+name: "Dummy GA4GH ServiceInfo SERVICE"
 
 type:
   group: "org.ga4gh"
@@ -15,5 +15,5 @@ version: "9.9.9"
 
 # --- Optional fields ---
 
-description: "A reusable sidecar for standardizing GA4GH ServiceInfo metadata."
+description: "A reusable SERVICE for standardizing GA4GH ServiceInfo metadata."
 environment: "dev"

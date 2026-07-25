@@ -12,7 +12,7 @@ import (
 var (
 	httpRequestsTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "ga4gh_sidecar_http_requests_total",
+			Name: "ga4gh_SERVICE_http_requests_total",
 			Help: "Total number of HTTP requests processed by the GA4GH service-info service.",
 		},
 		[]string{"path", "method", "status"},
@@ -20,7 +20,7 @@ var (
 
 	httpRequestDuration = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "ga4gh_sidecar_http_request_duration_seconds",
+			Name:    "ga4gh_SERVICE_http_request_duration_seconds",
 			Help:    "HTTP request latency in seconds for the GA4GH service-info service.",
 			Buckets: prometheus.DefBuckets,
 		},

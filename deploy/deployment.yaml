@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ga4gh-sidecar
+  name: ga4gh-SERVICE
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ga4gh-sidecar
+      app: ga4gh-SERVICE
   template:
     metadata:
       labels:
-        app: ga4gh-sidecar
+        app: ga4gh-SERVICE
     spec:
       containers:
-      - name: sidecar
-        image: ga4gh-service-info-sidecar:latest
+      - name: SERVICE
+        image: ga4gh-service-info-SERVICE:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
         env:
-        - name: SIDECAR_CONFIG_PATH
-          value: /etc/sidecar/service_info.yaml
+        - name: SERVICE_CONFIG_PATH
+          value: /etc/SERVICE/service_info.yaml
         volumeMounts:
         - name: config-volume
-          mountPath: /etc/sidecar
+          mountPath: /etc/SERVICE
         livenessProbe:
           httpGet:
             path: /healthz

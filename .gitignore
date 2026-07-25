@@ -1,5 +1,5 @@
 # Go binary output
-/sidecar
+/SERVICE
 *.exe
 
 # Go vendor (if used)

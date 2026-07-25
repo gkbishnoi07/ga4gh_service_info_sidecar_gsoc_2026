@@ -1,11 +1,11 @@
 ---
 title: Technical Architecture
-description: Architecture of the GA4GH ServiceInfo Sidecar — a standalone Go service that serves standardized metadata via Kubernetes Ingress routing.
+description: Architecture of the GA4GH ServiceInfo SERVICE — a standalone Go service that serves standardized metadata via Kubernetes Ingress routing.
 ---
 
 # Architecture
 
-This document describes the technical architecture of the **GA4GH ServiceInfo Sidecar** — a lightweight, standalone Go service that standardizes service metadata across GA4GH genomics services.
+This document describes the technical architecture of the **GA4GH ServiceInfo SERVICE** — a lightweight, standalone Go service that standardizes service metadata across GA4GH genomics services.
 
 ---
 
@@ -30,9 +30,9 @@ This happens because **updating this data requires a code change, a code review,
 
 ---
 
-## 2. What the Sidecar Does
+## 2. What the SERVICE Does
 
-The sidecar is a **standalone Go service** deployed as its own Pod in Kubernetes. It:
+The SERVICE is a **standalone Go service** deployed as its own Pod in Kubernetes. It:
 
 1. **Serves** `GET /service-info` with operator-managed metadata from a YAML ConfigMap.
 2. **Validates** the metadata against the GA4GH ServiceInfo v1 specification on every load.
@@ -40,7 +40,7 @@ The sidecar is a **standalone Go service** deployed as its own Pod in Kubernetes
 4. **Exposes** `/healthz` and `/readyz` endpoints for Kubernetes probes.
 5. **Never touches** the real GA4GH service — no proxying, no coupling, no blast radius.
 
-The Kubernetes **Ingress controller** (which already exists in every production cluster) routes `/service-info` requests to the sidecar and everything else directly to the real service.
+The Kubernetes **Ingress controller** (which already exists in every production cluster) routes `/service-info` requests to the SERVICE and everything else directly to the real service.
 
 ---
 
@@ -50,7 +50,7 @@ The Kubernetes **Ingress controller** (which already exists in every production 
                            ┌────────────────────────────────┐
                            │       Kubernetes Ingress       │
                            │                                │
-External Traffic           │  /service-info ────────────────┼──▶ Sidecar Pod (:8080)
+External Traffic           │  /service-info ────────────────┼──▶ SERVICE Pod (:8080)
 ─────────────────────────▶ │                                  │      Go binary, ~10MB
    :443 (HTTPS)            │  /* (everything else) ─────────┼──▶ GA4GH Service Pod
                            │                                  │      (DRS/TES/WES/TRS)
@@ -72,21 +72,21 @@ External Traffic           │  /service-info ───────────�
 | **Memory footprint** | ~15–30MB RSS |
 | **Startup time** | <100ms |
 | **External dependencies** | None (Go stdlib `net/http`) |
-| **Blast radius** | If sidecar crashes, only `/service-info` returns 503. DRS/TES/WES continue working. |
+| **Blast radius** | If SERVICE crashes, only `/service-info` returns 503. DRS/TES/WES continue working. |
 
 ---
 
 ## 4. Why Ingress Routing?
 
-An earlier design routed **100% of all traffic** through the sidecar as a reverse proxy, just to intercept the 1–5% of requests that hit `/service-info`. That approach had fundamental problems:
+An earlier design routed **100% of all traffic** through the SERVICE as a reverse proxy, just to intercept the 1–5% of requests that hit `/service-info`. That approach had fundamental problems:
 
 | Concern | Reverse Proxy | Ingress Routing (current) |
 |---|---|---|
-| Blast radius | Sidecar crash kills ALL traffic | Only `/service-info` is affected |
-| Traffic overhead | Every request proxied through sidecar | Only metadata requests hit sidecar |
+| Blast radius | SERVICE crash kills ALL traffic | Only `/service-info` is affected |
+| Traffic overhead | Every request proxied through SERVICE | Only metadata requests hit SERVICE |
 | Footprint | Heavy runtime + dependencies | ~10MB (Go static binary) |
 | Integration effort | Restructure entire Pod | Add one Ingress rule |
-| Coupling | Sidecar + service in same Pod | Completely independent Pods |
+| Coupling | SERVICE + service in same Pod | Completely independent Pods |
 
 The Ingress routing pattern solves a small problem with a small solution.
 
@@ -106,12 +106,12 @@ spec:
     - host: drs.myinstitute.org
       http:
         paths:
-          # Service-info → Sidecar
+          # Service-info → SERVICE
           - path: /ga4gh/drs/v1/service-info
             pathType: Exact
             backend:
               service:
-                name: serviceinfo-sidecar
+                name: serviceinfo-SERVICE
                 port:
                   number: 8080
 
@@ -133,7 +133,7 @@ Users add **one Ingress rule**. That's the entire integration change.
 
 All metadata lives in a YAML file. In production, this file is mounted from a Kubernetes ConfigMap. For local development, a dummy config file is included in the repository.
 
-The config file path is controlled by the `SIDECAR_CONFIG_PATH` environment variable. If unset, it falls back to `./configs/dummy_service_info.yaml`.
+The config file path is controlled by the `SERVICE_CONFIG_PATH` environment variable. If unset, it falls back to `./configs/dummy_service_info.yaml`.
 
 ### Example Configuration
 
@@ -156,19 +156,19 @@ No operational settings mixed in — the YAML is **pure metadata**. Deployment t
 
 ### GA4GH Schema Validation
 
-On every load (initial startup and hot-reload), the sidecar validates that the following required fields are present and non-empty:
+On every load (initial startup and hot-reload), the SERVICE validates that the following required fields are present and non-empty:
 
 - `id`, `name`, `version`
 - `type.group`, `type.artifact`, `type.version`
 - `organization.name`, `organization.url`
 
-If any required field is missing, the sidecar **rejects the configuration** and retains the previously loaded valid config. It never crashes or serves invalid metadata.
+If any required field is missing, the SERVICE **rejects the configuration** and retains the previously loaded valid config. It never crashes or serves invalid metadata.
 
 ---
 
 ## 7. Hot Reload Architecture
 
-When a ConfigMap is updated, Kubernetes performs an **atomic symlink swap** on the mounted directory. The sidecar detects this using `fsnotify` and reloads configuration atomically:
+When a ConfigMap is updated, Kubernetes performs an **atomic symlink swap** on the mounted directory. The SERVICE detects this using `fsnotify` and reloads configuration atomically:
 
 ```
 DevOps edits ConfigMap in Git
@@ -193,7 +193,7 @@ Next request sees updated values — zero downtime
 
 - **Directory watching**: `fsnotify` watches the *directory* containing the config file, not the file itself. This is required because Kubernetes ConfigMap updates work via symlink swaps — the file inode changes, so watching the file directly would miss the update.
 - **Thread safety**: A `sync.RWMutex` protects the config pointer. HTTP handlers acquire a read lock (`RLock`), while the reload goroutine acquires a write lock (`Lock`) only during the brief pointer swap.
-- **Failure safety**: If the new YAML is invalid (missing fields, bad syntax), the reload is rejected with a structured log error. The sidecar continues serving the previous valid configuration.
+- **Failure safety**: If the new YAML is invalid (missing fields, bad syntax), the reload is rejected with a structured log error. The SERVICE continues serving the previous valid configuration.
 - **Structured logging**: All reload events are logged via Go's `log/slog` package with JSON output, making them compatible with cloud-native observability stacks.
 
 ---
@@ -213,7 +213,7 @@ Next request sees updated values — zero downtime
 ```
 ga4gh_service_info_sidecar_gsoc_2026/
 ├── cmd/
-│   └── sidecar/
+│   └── SERVICE/
 │       └── main.go                  ← Entrypoint: HTTP server, slog, fsnotify
 ├── internal/
 │   ├── config/

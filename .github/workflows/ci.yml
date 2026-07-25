@@ -62,4 +62,4 @@ jobs:
           go-version: "1.22"
 
       - name: Build binary
-        run: go build -o /dev/null ./cmd/sidecar
+        run: go build -o /dev/null ./cmd/SERVICE

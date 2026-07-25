@@ -13,13 +13,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Config holds the sidecar's runtime configuration.
+// Config holds the SERVICE's runtime configuration.
 type Config struct {
 	Port        string
 	ServiceInfo model.ServiceInfo
 }
 
-// ConfigWatcher safely manages the sidecar configuration with hot-reload support.
+// ConfigWatcher safely manages the SERVICE configuration with hot-reload support.
 type ConfigWatcher struct {
 	mu       sync.RWMutex
 	config   *Config
