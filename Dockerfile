@@ -13,7 +13,7 @@ RUN go mod download
 COPY . .
 
 # Statically compile the Go binary with optimizations and CGO disabled
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o sidecar cmd/sidecar/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o SERVICE cmd/server/main.go
 
 # Final scratch stage for an ultra-lightweight and secure runtime
 FROM scratch
@@ -25,7 +25,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 
 # Copy the statically compiled binary
-COPY --from=builder /app/sidecar /sidecar
+COPY --from=builder /app/SERVICE /SERVICE
 
 # Copy default config file as a fallback configuration
 COPY configs/dummy_service_info.yaml /configs/dummy_service_info.yaml
@@ -36,6 +36,6 @@ USER nobody
 
 EXPOSE 8080
 
-ENTRYPOINT ["/sidecar"]
+ENTRYPOINT ["/SERVICE"]
 
 

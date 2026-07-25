@@ -1,5 +1,5 @@
-site_name: GA4GH ServiceInfo Sidecar
-site_description: Reusable sidecar service for standardizing GA4GH ServiceInfo metadata.
+site_name: GA4GH ServiceInfo SERVICE
+site_description: Reusable SERVICE service for standardizing GA4GH ServiceInfo metadata.
 site_author: GA4GH
 site_url: https://ga4gh.github.io/ga4gh_service_info_sidecar_gsoc_2026/
 

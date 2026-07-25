@@ -1,4 +1,4 @@
-# GA4GH ServiceInfo Sidecar
+# GA4GH ServiceInfo SERVICE
 
 A lightweight, cloud-native standalone Go microservice for standardizing and serving GA4GH `/service-info` metadata across implementations such as DRS, TES, WES, and TRS.
 
@@ -8,9 +8,9 @@ A standalone microservice maintained under the [Global Alliance for Genomics and
 
 ## How It Works
 
-The sidecar runs as a **standalone Pod** alongside your genomics API (e.g. DRS/TES) in the same Kubernetes cluster. Your Ingress controller routes `/service-info` requests directly to the sidecar, while routing all other API traffic to your main service. 
+The SERVICE runs as a **standalone Pod** alongside your genomics API (e.g. DRS/TES) in the same Kubernetes cluster. Your Ingress controller routes `/service-info` requests directly to the SERVICE, while routing all other API traffic to your main service. 
 
-Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The sidecar uses Go's `fsnotify` library to listen for changes to the ConfigMap directory and **hot-reloads** the configuration dynamically in memory without restarting the container.
+Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The SERVICE uses Go's `fsnotify` library to listen for changes to the ConfigMap directory and **hot-reloads** the configuration dynamically in memory without restarting the container.
 
 ---
 
@@ -37,7 +37,7 @@ Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The sidecar 
 
 2. **Run Local Server:**
    ```bash
-   go run ./cmd/sidecar
+   go run ./cmd/SERVICE
    ```
    *The server will start on port `8080` using a local dummy config path fallback.*
 
@@ -63,24 +63,24 @@ Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The sidecar 
 
 ## Observability & Metrics
 
-The `/metrics` endpoint exposes standard Go/Process metrics along with custom sidecar HTTP metrics:
+The `/metrics` endpoint exposes standard Go/Process metrics along with custom SERVICE HTTP metrics:
 
-- `ga4gh_sidecar_http_requests_total{path, method, status}`: Total number of requests processed.
-- `ga4gh_sidecar_http_request_duration_seconds{path, method}`: Histogram of request latencies.
+- `ga4gh_SERVICE_http_requests_total{path, method, status}`: Total number of requests processed.
+- `ga4gh_SERVICE_http_request_duration_seconds{path, method}`: Histogram of request latencies.
 
 Example Prometheus config scrape job snippet:
 ```yaml
 scrape_configs:
-  - job_name: 'ga4gh-service-info-sidecar'
+  - job_name: 'ga4gh-service-info-SERVICE'
     static_configs:
-      - targets: ['ga4gh-sidecar.default.svc.cluster.local:8080']
+      - targets: ['ga4gh-SERVICE.default.svc.cluster.local:8080']
 ```
 
 ---
 
 ## Kubernetes Deployment (Minikube E2E Testing)
 
-We provide Kubernetes manifests under `deploy/` to easily deploy the sidecar.
+We provide Kubernetes manifests under `deploy/` to easily deploy the SERVICE.
 
 ### 1. Point local terminal to Minikube Docker registry
 If testing in Minikube, configure your shell to build inside the Minikube virtual environment:
@@ -95,7 +95,7 @@ eval $(minikube docker-env)
 ### 2. Build the Docker Image
 Build the scratch-based image inside Minikube's Docker daemon:
 ```bash
-docker build -t ga4gh-service-info-sidecar:latest .
+docker build -t ga4gh-service-info-SERVICE:latest .
 ```
 
 ### 3. Apply the Manifests
@@ -106,10 +106,10 @@ kubectl apply -f deploy/
 ### 4. Verify deployment state
 ```bash
 # Check pod is running and healthy
-kubectl get pods -l app=ga4gh-sidecar
+kubectl get pods -l app=ga4gh-SERVICE
 
 # Expose port locally to verify endpoints
-kubectl port-forward svc/ga4gh-sidecar 8080:8080
+kubectl port-forward svc/ga4gh-SERVICE 8080:8080
 ```
 Query `http://localhost:8080/service-info` or `http://localhost:8080/metrics` to verify.
 
@@ -118,14 +118,14 @@ Query `http://localhost:8080/service-info` or `http://localhost:8080/metrics` to
    ```bash
    kubectl edit configmap service-info-config
    ```
-2. Change the `name` field value (e.g. from `"GA4GH Service Info Sidecar"` to `"My Local Genomics Service"`).
-3. Request `/service-info` again. Inside a few seconds, the sidecar picks up the symlink swap and serves the updated field without any container restarts or restarts:
+2. Change the `name` field value (e.g. from `"GA4GH Service Info SERVICE"` to `"My Local Genomics Service"`).
+3. Request `/service-info` again. Inside a few seconds, the SERVICE picks up the symlink swap and serves the updated field without any container restarts or restarts:
    ```bash
    curl http://localhost:8080/service-info
    ```
 
 ### Ingress Integration
-Review `deploy/ingress.yaml` for instructions on how to integrate the sidecar path rule into your existing genomics service's Ingress.
+Review `deploy/ingress.yaml` for instructions on how to integrate the SERVICE path rule into your existing genomics service's Ingress.
 
 
 

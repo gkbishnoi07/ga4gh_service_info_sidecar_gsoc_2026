@@ -7,12 +7,12 @@
 # Standard Usage:
 # Copy the path block under rules[0].http.paths and paste it under the rules 
 # section of your existing parent service's (e.g. DRS/TES/TRS) Ingress manifest.
-# The sidecar path rule MUST be placed above the main API routing rules.
+# The SERVICE path rule MUST be placed above the main API routing rules.
 # ==============================================================================
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ga4gh-sidecar-ingress
+  name: ga4gh-SERVICE-ingress
 spec:
   rules:
   - host: genomics-api.example.com
@@ -23,7 +23,7 @@ spec:
         pathType: Exact
         backend:
           service:
-            name: ga4gh-sidecar
+            name: ga4gh-SERVICE
             port:
               number: 8080
 

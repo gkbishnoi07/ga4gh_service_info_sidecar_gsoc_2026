@@ -1,4 +1,4 @@
-// Package main is the entrypoint for the GA4GH ServiceInfo Sidecar.
+// Package main is the entrypoint for the GA4GH ServiceInfo SERVICE.
 package main
 
 import (
@@ -24,7 +24,7 @@ func main() {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
 	// 2. Read configuration path from environment variable fallback to local dummy config
-	configPath := os.Getenv("SIDECAR_CONFIG_PATH")
+	configPath := os.Getenv("SERVICE_CONFIG_PATH")
 	if configPath == "" {
 		configPath = "./configs/dummy_service_info.yaml"
 	}
@@ -32,7 +32,7 @@ func main() {
 	// 3. Initialize the config watcher (synchronous initial load)
 	watcher, err := config.NewWatcher(configPath)
 	if err != nil {
-		slog.Error("Failed to initialize sidecar configuration", "error", err)
+		slog.Error("Failed to initialize SERVICE configuration", "error", err)
 		os.Exit(1)
 	}
 
@@ -76,7 +76,7 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	slog.Info("GA4GH ServiceInfo Sidecar starting", "port", cfg.Port, "metrics_port", "9090", "config_path", configPath)
+	slog.Info("GA4GH ServiceInfo SERVICE starting", "port", cfg.Port, "metrics_port", "9090", "config_path", configPath)
 
 	var wg sync.WaitGroup
 
