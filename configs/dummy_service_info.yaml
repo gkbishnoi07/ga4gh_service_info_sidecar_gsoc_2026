@@ -1,6 +1,6 @@
-id: "org.ga4gh.serviceinfo-SERVICE"
+id: "org.ga4gh.serviceinfo-service"
 
-name: "Dummy GA4GH ServiceInfo SERVICE"
+name: "Dummy GA4GH ServiceInfo service"
 
 type:
   group: "org.ga4gh"
@@ -15,5 +15,5 @@ version: "9.9.9"
 
 # --- Optional fields ---
 
-description: "A reusable SERVICE for standardizing GA4GH ServiceInfo metadata."
+description: "A reusable service for standardizing GA4GH ServiceInfo metadata."
 environment: "dev"
