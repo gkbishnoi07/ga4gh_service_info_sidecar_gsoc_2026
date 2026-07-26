@@ -4,13 +4,13 @@ metadata:
   name: service-info-config
 data:
   service_info.yaml: |
-    id: "org.ga4gh.service-info-SERVICE"
-    name: "GA4GH Service Info SERVICE"
+    id: "org.ga4gh.service-info-service"
+    name: "GA4GH Service Info service"
     type:
       group: "org.ga4gh"
       artifact: "service-info"
       version: "1.0.0"
-    description: "SERVICE for exposing GA4GH-compliant metadata from configuration files."
+    description: "service for exposing GA4GH-compliant metadata from configuration files."
     organization:
       name: "Global Alliance for Genomics and Health"
       url: "https://www.ga4gh.org"
