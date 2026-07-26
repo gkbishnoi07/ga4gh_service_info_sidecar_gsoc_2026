@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ga4gh-SERVICE
+  name: ga4gh-service-info
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ga4gh-SERVICE
+      app: ga4gh-service-info
   template:
     metadata:
       labels:
-        app: ga4gh-SERVICE
+        app: ga4gh-service-info
     spec:
       containers:
-      - name: SERVICE
-        image: ga4gh-service-info-SERVICE:latest
+      - name: service-info
+        image: ga4gh-service-info-service-info:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
         env:
-        - name: SERVICE_CONFIG_PATH
-          value: /etc/SERVICE/service_info.yaml
+        - name: service-info_CONFIG_PATH
+          value: /etc/service-info/service_info.yaml
         volumeMounts:
         - name: config-volume
-          mountPath: /etc/SERVICE
+          mountPath: /etc/service-info
         livenessProbe:
           httpGet:
             path: /healthz
