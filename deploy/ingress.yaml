@@ -12,7 +12,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ga4gh-service-ingress
+  name: ga4gh-service-info-info-ingress
 spec:
   rules:
   - host: genomics-api.example.com
@@ -23,7 +23,7 @@ spec:
         pathType: Exact
         backend:
           service:
-            name: ga4gh-service
+            name: ga4gh-service-info
             port:
               number: 8080
 
