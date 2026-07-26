@@ -1,4 +1,4 @@
-# GA4GH ServiceInfo SERVICE
+# GA4GH Service Info Standalone
 
 A lightweight, cloud-native standalone Go microservice for standardizing and serving GA4GH `/service-info` metadata across implementations such as DRS, TES, WES, and TRS.
 
@@ -8,9 +8,20 @@ A standalone microservice maintained under the [Global Alliance for Genomics and
 
 ## How It Works
 
-The SERVICE runs as a **standalone Pod** alongside your genomics API (e.g. DRS/TES) in the same Kubernetes cluster. Your Ingress controller routes `/service-info` requests directly to the SERVICE, while routing all other API traffic to your main service. 
+The service runs as a **standalone Pod** alongside your genomics API (e.g. DRS/TES) in the same Kubernetes cluster. Your Ingress controller routes `/service-info` requests directly to this service, while routing all other API traffic to your main backend service. 
 
-Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The SERVICE uses Go's `fsnotify` library to listen for changes to the ConfigMap directory and **hot-reloads** the configuration dynamically in memory without restarting the container.
+```mermaid
+graph TD
+    Client[Client / Web App] -->|HTTP Request| Ingress[Kubernetes Ingress]
+    
+    Ingress -->|Path: /service-info| SI[Our Standalone Service]
+    Ingress -->|Path: /ga4gh/drs/v1/*| DRS[Existing DRS Backend]
+    
+    SI --> Config[Kubernetes ConfigMap]
+    DRS --> DB[(DRS Database)]
+```
+
+Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The service uses Go's `fsnotify` library to listen for changes to the ConfigMap directory and **hot-reloads** the configuration dynamically in memory without restarting the container.
 
 ---
 
@@ -47,7 +58,7 @@ Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The SERVICE 
    curl -i http://localhost:8080/service-info
 
    # Prometheus Metrics
-   curl -i http://localhost:8080/metrics
+   curl -i http://localhost:9090/metrics
 
    # Kubernetes health probes
    curl -i http://localhost:8080/healthz
@@ -63,24 +74,24 @@ Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The SERVICE 
 
 ## Observability & Metrics
 
-The `/metrics` endpoint exposes standard Go/Process metrics along with custom SERVICE HTTP metrics:
+The `/metrics` endpoint exposes standard Go/Process metrics along with custom service HTTP metrics:
 
-- `ga4gh_SERVICE_http_requests_total{path, method, status}`: Total number of requests processed.
-- `ga4gh_SERVICE_http_request_duration_seconds{path, method}`: Histogram of request latencies.
+- `ga4gh_service_http_requests_total{path, method, status}`: Total number of requests processed.
+- `ga4gh_service_http_request_duration_seconds{path, method}`: Histogram of request latencies.
 
 Example Prometheus config scrape job snippet:
 ```yaml
 scrape_configs:
-  - job_name: 'ga4gh-service-info-SERVICE'
+  - job_name: 'ga4gh-service-info'
     static_configs:
-      - targets: ['ga4gh-SERVICE.default.svc.cluster.local:8080']
+      - targets: ['ga4gh-service-info.default.svc.cluster.local:9090']
 ```
 
 ---
 
 ## Kubernetes Deployment (Minikube E2E Testing)
 
-We provide Kubernetes manifests under `deploy/` to easily deploy the SERVICE.
+We provide Kubernetes manifests under `deploy/` to easily deploy the service.
 
 ### 1. Point local terminal to Minikube Docker registry
 If testing in Minikube, configure your shell to build inside the Minikube virtual environment:
@@ -95,7 +106,7 @@ eval $(minikube docker-env)
 ### 2. Build the Docker Image
 Build the scratch-based image inside Minikube's Docker daemon:
 ```bash
-docker build -t ga4gh-service-info-SERVICE:latest .
+docker build -t ga4gh-service-info:latest .
 ```
 
 ### 3. Apply the Manifests
@@ -106,28 +117,26 @@ kubectl apply -f deploy/
 ### 4. Verify deployment state
 ```bash
 # Check pod is running and healthy
-kubectl get pods -l app=ga4gh-SERVICE
+kubectl get pods -l app=ga4gh-service-info
 
 # Expose port locally to verify endpoints
-kubectl port-forward svc/ga4gh-SERVICE 8080:8080
+kubectl port-forward svc/ga4gh-service-info 8080:8080
 ```
-Query `http://localhost:8080/service-info` or `http://localhost:8080/metrics` to verify.
+Query `http://localhost:8080/service-info` to verify.
 
 ### 5. Verify Hot-Reloading in-cluster
 1. Edit the running configmap:
    ```bash
    kubectl edit configmap service-info-config
    ```
-2. Change the `name` field value (e.g. from `"GA4GH Service Info SERVICE"` to `"My Local Genomics Service"`).
-3. Request `/service-info` again. Inside a few seconds, the SERVICE picks up the symlink swap and serves the updated field without any container restarts or restarts:
+2. Change the `name` field value (e.g. from `"GA4GH Service Info"` to `"My Local Genomics Service"`).
+3. Request `/service-info` again. Inside a few seconds, the service picks up the symlink swap and serves the updated field without any container restarts or dropped connections:
    ```bash
    curl http://localhost:8080/service-info
    ```
 
 ### Ingress Integration
-Review `deploy/ingress.yaml` for instructions on how to integrate the SERVICE path rule into your existing genomics service's Ingress.
-
-
+Review `deploy/ingress.yaml` for instructions on how to integrate the service path rule into your existing genomics service's Ingress.
 
 ---
 

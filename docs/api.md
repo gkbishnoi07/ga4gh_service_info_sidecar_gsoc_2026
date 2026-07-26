@@ -1,6 +1,6 @@
 # API Reference
 
-The GA4GH ServiceInfo SERVICE exposes three HTTP endpoints. All responses use `Content-Type: application/json`.
+The GA4GH ServiceInfo service exposes three HTTP endpoints. All responses use `Content-Type: application/json`.
 
 ---
 
