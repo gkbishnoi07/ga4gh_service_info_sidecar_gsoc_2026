@@ -74,7 +74,7 @@ jobs:
             exit 1
           fi
           # Verify valid JSON
-          curl -s http://localhost:8080/service-info | jq . > /dev/null
+          curl -s http://localhost:8080/service-info | python3 -m json.tool > /dev/null
 
       - name: Test /metrics endpoint (Port 9090)
         run: |
@@ -83,3 +83,7 @@ jobs:
             echo "Metrics endpoint failed with status $STATUS"
             exit 1
           fi
+
+      - name: Cleanup Docker container
+        if: always()
+        run: docker rm -f ga4gh-service
