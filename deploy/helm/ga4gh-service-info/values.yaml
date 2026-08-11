@@ -1,0 +1,64 @@
+# -- Number of pod replicas
+replicaCount: 1
+
+image:
+  # -- Docker image repository
+  repository: ghcr.io/ga4gh/ga4gh_service_info_sidecar_gsoc_2026
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag (defaults to the chart appVersion)
+  tag: ""
+
+# -- Kubernetes port for the main application server
+service:
+  type: ClusterIP
+  port: 8080
+
+# -- Kubernetes port for the internal Prometheus metrics server
+metricsService:
+  enabled: true
+  port: 9090
+
+ingress:
+  # -- Enable Ingress resource creation
+  enabled: false
+  # -- Ingress class name (e.g., nginx)
+  className: ""
+  # -- Annotations to add to the Ingress resource
+  annotations: {}
+  # -- Hostname for the Ingress rule
+  host: genomics-api.example.com
+  # -- Path to route to the service-info backend
+  path: /ga4gh/drs/v1/service-info
+  # -- Path type (Exact or Prefix)
+  pathType: Exact
+
+# -- Liveness and readiness probe configuration
+probes:
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 2
+    periodSeconds: 10
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 2
+    periodSeconds: 5
+
+# -- The GA4GH service-info metadata served by the application.
+# This entire block is mounted as a YAML file inside the container
+# and hot-reloaded by fsnotify whenever the ConfigMap is updated.
+serviceInfo:
+  id: "org.ga4gh.service-info-service"
+  name: "GA4GH Service Info service"
+  type:
+    group: "org.ga4gh"
+    artifact: "service-info"
+    version: "1.0.0"
+  description: "service for exposing GA4GH-compliant metadata from configuration files."
+  organization:
+    name: "Global Alliance for Genomics and Health"
+    url: "https://www.ga4gh.org"
+  contactUrl: "mailto:support@ga4gh.org"
+  documentationUrl: "https://github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026"
+  environment: "production"
+  version: "1.0.0"
