@@ -1,0 +1,18 @@
+apiVersion: v2
+name: ga4gh-service-info
+description: A Helm chart for deploying the GA4GH Service Info standalone microservice on Kubernetes.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - ga4gh
+  - service-info
+  - genomics
+  - bioinformatics
+  - kubernetes
+home: https://github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026
+sources:
+  - https://github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026
+maintainers:
+  - name: gkbishnoi07
+    url: https://github.com/gkbishnoi07
