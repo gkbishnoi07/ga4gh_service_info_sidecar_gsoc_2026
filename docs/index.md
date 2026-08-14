@@ -15,6 +15,8 @@ Instead of proxying all traffic, the service runs as its own Kubernetes Pod. The
 - **ConfigMap Hot Reload** — Update metadata via GitOps with zero restart
 - **GA4GH Compliant** — Validated against the ServiceInfo v1 specification
 - **Kubernetes Native** — `/healthz` + `/readyz` probes, ConfigMap volumes
+- **Helm Support** — Easily configure and deploy via standard Helm values
+- **GHCR Registry** — Pre-built distroless images automatically published to GitHub Container Registry
 
 ---
 

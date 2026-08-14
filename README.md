@@ -89,11 +89,22 @@ scrape_configs:
 
 ---
 
+## Production Deployment (Pre-built Image)
+
+Pre-built Docker images are automatically published to the GitHub Container Registry (GHCR) on every merge to `main`. You do not need to build from source in production:
+```bash
+docker pull ghcr.io/gkbishnoi07/ga4gh_service_info_sidecar_gsoc_2026:latest
+```
+
+---
+
 ## Kubernetes Deployment (Minikube E2E Testing)
 
-We provide Kubernetes manifests under `deploy/` to easily deploy the service.
+We provide standard Kubernetes manifests under `deploy/` for raw manifest deployments, and a Helm Chart under `deploy/helm/` for templated deployments.
 
-### 1. Point local terminal to Minikube Docker registry
+### Option A: Raw Kubernetes Manifests
+
+#### 1. Point local terminal to Minikube Docker registry
 If testing in Minikube, configure your shell to build inside the Minikube virtual environment:
 ```bash
 # PowerShell
@@ -103,18 +114,18 @@ minikube docker-env | Invoke-Expression
 eval $(minikube docker-env)
 ```
 
-### 2. Build the Docker Image
+#### 2. Build the Docker Image
 Build the scratch-based image inside Minikube's Docker daemon:
 ```bash
 docker build -t ga4gh-service-info:latest .
 ```
 
-### 3. Apply the Manifests
+#### 3. Apply the Manifests
 ```bash
 kubectl apply -f deploy/
 ```
 
-### 4. Verify deployment state
+#### 4. Verify deployment state
 ```bash
 # Check pod is running and healthy
 kubectl get pods -l app=ga4gh-service-info
@@ -124,7 +135,7 @@ kubectl port-forward svc/ga4gh-service-info 8080:8080
 ```
 Query `http://localhost:8080/service-info` to verify.
 
-### 5. Verify Hot-Reloading in-cluster
+#### 5. Verify Hot-Reloading in-cluster
 1. Edit the running configmap:
    ```bash
    kubectl edit configmap service-info-config
@@ -134,6 +145,27 @@ Query `http://localhost:8080/service-info` to verify.
    ```bash
    curl http://localhost:8080/service-info
    ```
+
+### Option B: Helm Chart (Recommended for Production)
+
+The Helm Chart is located in `deploy/helm/ga4gh-service-info`.
+
+#### 1. Install the Chart
+Install the chart locally or from your values file:
+```bash
+helm install my-service ./deploy/helm/ga4gh-service-info
+```
+
+#### 2. Overriding Values on Deploy
+You can dynamically customize any GA4GH metadata field, enable ingress, or modify replicas on deployment:
+```bash
+helm install my-service ./deploy/helm/ga4gh-service-info \
+  --set serviceInfo.environment="production" \
+  --set serviceInfo.organization.name="My Genome Center" \
+  --set ingress.enabled=true
+```
+
+Refer to the Chart's `values.yaml` for a complete list of configurable variables.
 
 ### Ingress Integration
 Review `deploy/ingress.yaml` for instructions on how to integrate the service path rule into your existing genomics service's Ingress.
