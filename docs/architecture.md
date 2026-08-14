@@ -213,7 +213,7 @@ Next request sees updated values — zero downtime
 ```
 ga4gh_service_info_sidecar_gsoc_2026/
 ├── cmd/
-│   └── service/
+│   └── server/
 │       └── main.go                  ← Entrypoint: HTTP server, slog, fsnotify
 ├── internal/
 │   ├── config/
@@ -242,5 +242,5 @@ ga4gh_service_info_sidecar_gsoc_2026/
 |---|---|---|
 | **Phase 0** | Go module, HTTP server, GA4GH JSON response, unit tests | ✅ Done |
 | **Phase 1** | YAML config loading, GA4GH schema validation, fsnotify hot reload, structured logging (`slog`) | ✅ Done |
-| **Phase 2** | Dockerfile, K8s manifests, Ingress rule, Minikube testing | 📋 Planned |
-| **Phase 3** | Helm chart, GitHub Actions CI/CD, quickstart guide | 📋 Planned |
+| **Phase 2** | Dockerfile, K8s manifests, Ingress rule, Minikube testing | ✅ Done |
+| **Phase 3** | Helm chart, GitHub Actions CI/CD, quickstart guide | ✅ Done |
