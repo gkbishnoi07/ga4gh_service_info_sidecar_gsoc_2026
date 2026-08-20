@@ -19,7 +19,7 @@ spec:
         ports:
         - containerPort: 8080
         env:
-        - name: service-info_CONFIG_PATH
+        - name: SERVICE_CONFIG_PATH
           value: /etc/service-info/service_info.yaml
         volumeMounts:
         - name: config-volume
