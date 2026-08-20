@@ -70,6 +70,11 @@ Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The service 
    go test ./... -v
    ```
 
+5. **Run Integration Tests (E2E):**
+   ```bash
+   go test -tags=integration ./... -v -count=1
+   ```
+
 ---
 
 ## Observability & Metrics

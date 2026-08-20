@@ -12,13 +12,14 @@ In production GA4GH deployments (like DRS or TES), instances are required to exp
 
 The **ServiceInfo service** solves this problem by running as a separate cloud-native microservice. It is deployed as its own Kubernetes Pod alongside your genomics service. Using Kubernetes Ingress rules, `/service-info` requests are redirected to this microservice, while all other paths go directly to the primary genomics service.
 
-```
-External Traffic           ┌────────────────────────────────┐
- ───────────────/service-info───────────────────────────────▶ ServiceInfo Service (Go, ~10MB)
-                 /* (all else)  │                                 │   (Serves dynamic ConfigMap config)
- ───────────────────────────────┼──▶ GA4GH Genomics Service      │
-                                │    (DRS/TES/WES/TRS engine)    │
-                                └────────────────────────────────┘
+```mermaid
+graph TD
+    Client[External Client] -->|HTTP Request| Ingress[Kubernetes Ingress]
+    
+    Ingress -->|/service-info| SI["ServiceInfo Service (Go, ~10MB)"]
+    Ingress -->|/* (all else)| Backend["GA4GH Genomics Service<br/>(DRS / TES / WES / TRS)"]
+    
+    SI -->|Hot Reloads| ConfigMap[ConfigMap volume]
 ```
 
 ---
