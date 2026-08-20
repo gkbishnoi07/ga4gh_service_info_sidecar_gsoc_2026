@@ -1,27 +1,52 @@
 # GA4GH ServiceInfo service
 
-Welcome to the **ServiceInfo service** documentation!
+Welcome to the **ServiceInfo service** documentation! 
 
-A lightweight, standalone Go service that standardizes GA4GH ServiceInfo metadata across implementations such as DRS, TES, WES, and TRS.
-
-## How It Works
-
-Instead of proxying all traffic, the service runs as its own Kubernetes Pod. The cluster's **Ingress controller** routes `/service-info` requests to the service, while everything else goes directly to the real GA4GH service. If the service is down, only `/service-info` is affected — the real service keeps running.
-
-## Key Features
-
-- **Go** — Single static binary, `scratch` container (<20MB), starts in <100ms
-- **Ingress Routing** — No reverse proxy overhead, no blast radius, one Ingress rule
-- **ConfigMap Hot Reload** — Update metadata via GitOps with zero restart
-- **GA4GH Compliant** — Validated against the ServiceInfo v1 specification
-- **Kubernetes Native** — `/healthz` + `/readyz` probes, ConfigMap volumes
-- **Helm Support** — Easily configure and deploy via standard Helm values
-- **GHCR Registry** — Pre-built distroless images automatically published to GitHub Container Registry
+A lightweight, standalone Go service that standardizes and dynamically serves GA4GH ServiceInfo metadata across implementations such as DRS, TES, WES, and TRS.
 
 ---
 
-!!! info "Active Development"
-    This project is in active development as part of **Google Summer of Code 2026** under **GA4GH**.
+## 💡 What is this project?
+
+In production GA4GH deployments (like DRS or TES), instances are required to expose a `/service-info` endpoint. Historically, this metadata has been hardcoded within the application binaries. This makes updating details (like organization URL, contact information, or environment) difficult, requiring a full code review, rebuild, CI run, and pod restart.
+
+The **ServiceInfo service** solves this problem by running as a separate cloud-native microservice. It is deployed as its own Kubernetes Pod alongside your genomics service. Using Kubernetes Ingress rules, `/service-info` requests are redirected to this microservice, while all other paths go directly to the primary genomics service.
+
+```
+External Traffic           ┌────────────────────────────────┐
+ ───────────────/service-info───────────────────────────────▶ ServiceInfo Service (Go, ~10MB)
+                 /* (all else)  │                                 │   (Serves dynamic ConfigMap config)
+ ───────────────────────────────┼──▶ GA4GH Genomics Service      │
+                                │    (DRS/TES/WES/TRS engine)    │
+                                └────────────────────────────────┘
+```
+
+---
+
+## 🎯 Who is this for?
+
+- **Genomics Platform Administrators:** Deploying and managing GA4GH endpoints in a Kubernetes cluster who want metadata updates without service interruption.
+- **Software Engineers / Contributors:** Developing new features or standard compliance improvements for GA4GH specifications.
+- **Security & Compliance Officers:** Requiring valid, standard-compliant ServiceInfo formats and active endpoints.
+
+---
+
+## ⚡ Key Features
+
+- **Go-Powered:** Single static binary, scratch base image (<20MB), starts in under 50ms with extremely low memory footprints (~15MB).
+- **Zero-Downtime Hot Reloading:** Automatically monitors ConfigMap changes using file watcher routines, revalidating and refreshing metadata dynamically in-memory without server restarts.
+- **Standard Compliant:** Automatically validates YAML configuration schemas against the official GA4GH ServiceInfo JSON specification.
+- **Kubernetes Native:** Includes `/healthz` and `/readyz` probes, metrics reporting for Prometheus via `/metrics`, and support for native Kubernetes Ingress routing.
+- **Helm Support:** Simple deployment via structured templates and standard values.
+
+---
+
+## 🧭 Navigation
+
+- To get started running and testing the service in under 5 minutes, see the [Quick Start Guide](quickstart.md).
+- For a complete list of configurable variables, see the [Configuration Reference](configuration.md).
+- To inspect available endpoints, see the [API Reference](api.md).
+- For detailed setup guidelines on how to build and contribute, see the [Developer Setup Guide](development.md).
 
 ---
 
@@ -32,6 +57,6 @@ Instead of proxying all traffic, the service runs as its own Kubernetes Pod. The
   <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/GSoC_logo.svg" alt="Google Summer of Code Logo" style="height: 90px; width: auto;" />
 </div>
 
-ServiceInfo service is an open-source project initiated during **Google Summer of Code (GSoC) 2026** under the **Global Alliance for Genomics and Health (GA4GH)** organization.
+ServiceInfo service is an open-source project developed under the formal governance of the **Global Alliance for Genomics and Health (GA4GH)** during **Google Summer of Code (GSoC) 2026**.
 
-The project is developed under the formal governance of **GA4GH**. We align with open-source community standards and welcome contributions from developers of all backgrounds. Please refer to our [Contributing Guidelines](https://github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/blob/main/CODE_OF_CONDUCT.md) to get started.
+We welcome contributions from developers of all backgrounds. Please refer to our [Contributing Guidelines](https://github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/blob/main/CODE_OF_CONDUCT.md) to get started.

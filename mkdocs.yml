@@ -58,5 +58,10 @@ plugins:
 
 nav:
   - Home: index.md
-  - Architecture: architecture.md
-  - API Reference: api.md
+  - User Guide:
+    - Quick Start: quickstart.md
+    - Configuration Reference: configuration.md
+    - API Reference: api.md
+  - Developer Guide:
+    - Architecture: architecture.md
+    - Development Setup: development.md
