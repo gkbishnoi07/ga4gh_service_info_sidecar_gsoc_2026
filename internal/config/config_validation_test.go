@@ -94,6 +94,20 @@ func TestValidation_MissingTypeArtifact(t *testing.T) {
 	}
 }
 
+func TestValidation_MissingTypeVersion(t *testing.T) {
+	cfg := map[string]interface{}{
+		"id":           "org.ga4gh.test",
+		"name":         "Test",
+		"version":      "1.0.0",
+		"type":         map[string]string{"group": "org.ga4gh", "artifact": "drs"},
+		"organization": map[string]string{"name": "GA4GH", "url": "https://ga4gh.org"},
+	}
+	_, err := config.NewWatcher(makeConfig(t, cfg))
+	if err == nil {
+		t.Error("expected error for missing type.version, got nil")
+	}
+}
+
 func TestValidation_MissingOrganizationURL(t *testing.T) {
 	cfg := map[string]interface{}{
 		"id":      "org.ga4gh.test",
@@ -123,7 +137,7 @@ func TestValidation_MissingOrganizationName(t *testing.T) {
 }
 
 func TestValidation_NonExistentFile(t *testing.T) {
-	_, err := config.NewWatcher("/nonexistent/path/config.yaml")
+	_, err := config.NewWatcher(filepath.Join(t.TempDir(), "does-not-exist.yaml"))
 	if err == nil {
 		t.Error("expected error for non-existent file, got nil")
 	}

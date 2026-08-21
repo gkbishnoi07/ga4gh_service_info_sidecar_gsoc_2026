@@ -72,8 +72,14 @@ func TestReload_UpdatesConfigOnFileChange(t *testing.T) {
 	updated["name"] = "Updated Service"
 	writeConfig(t, configPath, updated)
 
-	// Wait for the reload to pick up the change
-	time.Sleep(500 * time.Millisecond)
+	// Wait for the reload to pick up the change (poll to avoid flaky fixed sleeps under -race)
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if watcher.GetConfig().ServiceInfo.Name == "Updated Service" {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
 
 	cfg = watcher.GetConfig()
 	if cfg.ServiceInfo.Name != "Updated Service" {
@@ -102,7 +108,11 @@ func TestReload_RetainsPreviousConfigOnInvalidYAML(t *testing.T) {
 	if err := os.WriteFile(configPath, []byte("bad: yaml: {broken"), 0644); err != nil {
 		t.Fatalf("failed to write bad config: %v", err)
 	}
-	time.Sleep(500 * time.Millisecond)
+	// Wait for reload attempt (poll to avoid flaky fixed sleeps under -race)
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		time.Sleep(20 * time.Millisecond)
+	}
 
 	// Config should still be the original valid one
 	cfg := watcher.GetConfig()
@@ -135,7 +145,12 @@ func TestReload_RetainsPreviousConfigOnMissingRequiredFields(t *testing.T) {
 		// missing: version, type, organization
 	}
 	writeConfig(t, configPath, incomplete)
-	time.Sleep(500 * time.Millisecond)
+
+	// Wait for reload attempt (poll to avoid flaky fixed sleeps under -race)
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		time.Sleep(20 * time.Millisecond)
+	}
 
 	// Config should still be the original valid one
 	cfg := watcher.GetConfig()
