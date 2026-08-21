@@ -46,21 +46,14 @@ The Kubernetes **Ingress controller** (which already exists in every production 
 
 ## 3. High-Level Architecture
 
-```
-                           ┌────────────────────────────────┐
-                           │       Kubernetes Ingress       │
-                           │                                │
-External Traffic           │  /service-info ────────────────┼──▶ service Pod (:8080)
-─────────────────────────▶ │                                  │      Go binary, ~10MB
-   :443 (HTTPS)            │  /* (everything else) ─────────┼──▶ GA4GH Service Pod
-                           │                                  │      (DRS/TES/WES/TRS)
-                           └────────────────────────────────┘
-
-                           ┌────────────────────────────────┐
-                           │  ConfigMap                     │
-                           │  (mounted as volume)           │
-                           │  Watched by fsnotify           │
-                           └────────────────────────────────┘
+```mermaid
+graph TD
+    Client[External Client] -->|HTTP Request /:443| Ingress[Kubernetes Ingress]
+    
+    Ingress -->|/service-info| SI["ServiceInfo Pod\n(:8080 Go Binary)"]
+    Ingress -->|All other paths| Backend["GA4GH Genomics Pod\n(DRS / TES / WES / TRS)"]
+    
+    Config[ConfigMap Volume] -.->|Mounted & watched by fsnotify| SI
 ```
 
 ### Key Properties
@@ -170,23 +163,16 @@ If any required field is missing, the service **rejects the configuration** and 
 
 When a ConfigMap is updated, Kubernetes performs an **atomic symlink swap** on the mounted directory. The service detects this using `fsnotify` and reloads configuration atomically:
 
-```
-DevOps edits ConfigMap in Git
-        │
-        ▼
-ArgoCD / Flux syncs to Kubernetes
-        │
-        ▼
-Kubernetes updates ConfigMap → atomic symlink swap
-        │
-        ▼
-fsnotify goroutine detects change
-        │
-        ▼
-sync.RWMutex atomic config swap (old config kept on bad YAML)
-        │
-        ▼
-Next request sees updated values — zero downtime
+```mermaid
+flowchart TD
+    A[DevOps edits ConfigMap in Git] --> B[ArgoCD / Flux syncs to Kubernetes]
+    B --> C[Kubernetes updates ConfigMap<br/>atomic symlink swap]
+    C --> D[fsnotify goroutine detects change]
+    D --> E{Is YAML valid?}
+    E -->|Yes| F[sync.RWMutex updates config in-memory]
+    E -->|No| G[Log error & retain old config]
+    F --> H[Next request sees updated values<br/>zero downtime]
+    G --> H
 ```
 
 ### Implementation Details
