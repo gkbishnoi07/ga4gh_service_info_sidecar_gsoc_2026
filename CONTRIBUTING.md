@@ -31,7 +31,7 @@ Kindly use pull requests to submit changes to the code base. But please note tha
 3. If you've added code that should be tested, add tests alongside the source code in `*_test.go` files.
 4. Ensure that all tests and quality checks pass locally:
    * `go test ./...` (runs the unit test suite)
-   * `go test -tags=integration ./...` (runs integration tests)
+   * `go test ./... -count=1` (reruns tests without cached results)
    * `golangci-lint run` (linter check)
    * `go vet ./...` (compilation and sanity checks)
 5. Document your code and update all relevant documentation.
