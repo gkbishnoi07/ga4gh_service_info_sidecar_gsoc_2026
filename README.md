@@ -27,7 +27,7 @@ Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The service 
 
 ## Features
 
-- **Standard Compliance:** Validates the configuration against the official GA4GH ServiceInfo JSON schema.
+- **Standard Compliance:** Validates required ServiceInfo fields (id, name, version, type, organization) when loading the YAML configuration.
 - **Dynamic Hot-Reloading:** Refreshes metadata in real time when the mounted ConfigMap is updated (uses thread-safe `sync.RWMutex`).
 - **Kubernetes Health Probes:** Exposes `/healthz` (liveness) and `/readyz` (readiness). The `/readyz` probe fails with `503 Service Unavailable` if the file watcher experiences a fatal system error (e.g., inotify descriptor exhaustion).
 - **Graceful Shutdown:** Implements `context.Context` signals to intercept `SIGTERM` and shutdown the HTTP listener and background file watcher cleanly without dropping active requests.
@@ -70,9 +70,9 @@ Metadata is managed via a Kubernetes `ConfigMap` mounted as a file. The service 
    go test ./... -v
    ```
 
-5. **Run Integration Tests (E2E):**
+5. **Run Tests (No Cache):**
    ```bash
-   go test -tags=integration ./... -v -count=1
+   go test ./... -v -count=1
    ```
 
 ---

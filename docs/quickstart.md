@@ -95,7 +95,7 @@ spec:
       http:
         paths:
           # Route ServiceInfo metadata path to our standalone service
-          - path: /ga4gh/wes/v1/service-info
+          - path: /service-info
             pathType: Exact
             backend:
               service:

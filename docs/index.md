@@ -36,7 +36,7 @@ graph TD
 
 - **Go-Powered:** Single static binary, scratch base image (<20MB), starts in under 50ms with extremely low memory footprints (~15MB).
 - **Zero-Downtime Hot Reloading:** Automatically monitors ConfigMap changes using file watcher routines, revalidating and refreshing metadata dynamically in-memory without server restarts.
-- **Standard Compliant:** Automatically validates YAML configuration schemas against the official GA4GH ServiceInfo JSON specification.
+- **Standard Compliant:** Validates required ServiceInfo fields (id, name, version, type, organization) when loading the YAML configuration.
 - **Kubernetes Native:** Includes `/healthz` and `/readyz` probes, metrics reporting for Prometheus via `/metrics`, and support for native Kubernetes Ingress routing.
 - **Helm Support:** Simple deployment via structured templates and standard values.
 
