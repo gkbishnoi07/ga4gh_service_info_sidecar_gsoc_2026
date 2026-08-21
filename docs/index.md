@@ -16,8 +16,8 @@ The **ServiceInfo service** solves this problem by running as a separate cloud-n
 graph TD
     Client[External Client] -->|HTTP Request| Ingress[Kubernetes Ingress]
     
-    Ingress -->|/service-info| SI["ServiceInfo Service (Go, ~10MB)"]
-    Ingress -->|/* (all else)| Backend["GA4GH Genomics Service<br/>(DRS / TES / WES / TRS)"]
+    Ingress -->|/service-info| SI["ServiceInfo Service\n(Go, ~10MB)"]
+    Ingress -->|All other paths| Backend["GA4GH Genomics Service\n(DRS / TES / WES / TRS)"]
     
     SI -->|Hot Reloads| ConfigMap[ConfigMap volume]
 ```
