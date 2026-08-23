@@ -65,3 +65,4 @@ nav:
   - Developer Guide:
     - Architecture: architecture.md
     - Development Setup: development.md
+  - GSoC 2026 Journey: gsoc_journey.md
