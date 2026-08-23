@@ -6,7 +6,7 @@ A lightweight, standalone Go service that standardizes and dynamically serves GA
 
 ---
 
-## 💡 What is this project?
+## What is this project?
 
 In production GA4GH deployments (like DRS or TES), instances are required to expose a `/service-info` endpoint. Historically, this metadata has been hardcoded within the application binaries. This makes updating details (like organization URL, contact information, or environment) difficult, requiring a full code review, rebuild, CI run, and pod restart.
 
@@ -24,7 +24,7 @@ graph TD
 
 ---
 
-## 🎯 Who is this for?
+## Who is this for?
 
 - **Genomics Platform Administrators:** Deploying and managing GA4GH endpoints in a Kubernetes cluster who want metadata updates without service interruption.
 - **Software Engineers / Contributors:** Developing new features or standard compliance improvements for GA4GH specifications.
@@ -32,7 +32,7 @@ graph TD
 
 ---
 
-## ⚡ Key Features
+## Key Features
 
 - **Go-Powered:** Single static binary, scratch base image (<20MB), starts in under 50ms with extremely low memory footprints (~15MB).
 - **Zero-Downtime Hot Reloading:** Automatically monitors ConfigMap changes using file watcher routines, revalidating and refreshing metadata dynamically in-memory without server restarts.
@@ -42,7 +42,7 @@ graph TD
 
 ---
 
-## 🧭 Navigation
+## Navigation
 
 - To get started running and testing the service in under 5 minutes, see the [Quick Start Guide](quickstart.md).
 - For a complete list of configurable variables, see the [Configuration Reference](configuration.md).
@@ -51,7 +51,7 @@ graph TD
 
 ---
 
-## 🏛️ Project Governance
+## Project Governance
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 50px; margin: 30px 0; flex-wrap: wrap;">
   <img src="assets/ga4gh-logo.svg" alt="GA4GH Logo" style="height: 60px; width: auto;" />

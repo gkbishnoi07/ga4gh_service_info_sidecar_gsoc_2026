@@ -196,28 +196,33 @@ flowchart TD
 
 ## 9. Project Structure
 
-```
-ga4gh_service_info_sidecar_gsoc_2026/
-├── cmd/
-│   └── server/
-│       └── main.go                  ← Entrypoint: HTTP server, slog, fsnotify
-├── internal/
-│   ├── config/
-│   │   ├── config.go               ← ConfigWatcher, fsnotify, RWMutex, validation
-│   │   └── config_test.go          ← Config loading and validation tests
-│   ├── handler/
-│   │   ├── service_info.go          ← GET /service-info handler
-│   │   ├── health.go                ← GET /healthz, /readyz handlers
-│   │   ├── service_info_test.go
-│   │   └── health_test.go
-│   └── model/
-│       └── service_info.go          ← GA4GH ServiceInfo Go structs
-├── configs/
-│   └── dummy_service_info.yaml      ← Dummy config for local development
-├── docs/                            ← MkDocs documentation
-├── .github/workflows/               ← CI (Go vet, test, build)
-├── go.mod
-└── README.md
+```mermaid
+graph TD
+    Root["ga4gh_service_info_sidecar_gsoc_2026/"]
+    
+    Root --> Cmd["cmd/"]
+    Cmd --> Server["server/"]
+    Server --> Main["main.go\n(Entrypoint: HTTP server, slog, fsnotify)"]
+    
+    Root --> Internal["internal/"]
+    Internal --> Config["config/"]
+    Config --> ConfigGo["config.go\n(Watcher, fsnotify, RWMutex, validation)"]
+    Config --> ConfigTest["config_test.go\n(Config load/validation tests)"]
+    
+    Internal --> Handler["handler/"]
+    Handler --> SIHandler["service_info.go\n(GET /service-info handler)"]
+    Handler --> Health["health.go\n(GET /healthz, /readyz handlers)"]
+    Handler --> HandlerTests["*_test.go\n(Handler unit tests)"]
+    
+    Internal --> Model["model/"]
+    Model --> ModelGo["service_info.go\n(GA4GH ServiceInfo Go structs)"]
+    
+    Root --> Configs["configs/"]
+    Configs --> DummyYAML["dummy_service_info.yaml\n(Dummy config for local dev)"]
+    
+    Root --> Docs["docs/\n(MkDocs documentation)"]
+    Root --> Workflows[".github/workflows/\n(CI: Go vet, test, build)"]
+    Root --> Integration["integration_test.go\n(E2E integration test suite)"]
 ```
 
 ---
