@@ -4,7 +4,7 @@ Welcome to the contributor guidelines! This document describes how to set up you
 
 ---
 
-## 🛠️ Prerequisites
+## Prerequisites
 
 To build, test, and run the service, ensure you have the following installed:
 
@@ -15,7 +15,7 @@ To build, test, and run the service, ensure you have the following installed:
 
 ---
 
-## 🚀 Setting Up Locally
+## Setting Up Locally
 
 ### 1. Clone the Repository
 ```bash
@@ -43,7 +43,7 @@ go run ./cmd/server
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 ### Running Unit Tests
 Our unit test suite runs without external dependencies and executes in milliseconds:
@@ -66,7 +66,7 @@ go tool cover -html=coverage.out
 
 ---
 
-## 🧹 Code Style & Quality Control
+## Code Style & Quality Control
 
 Before committing or opening a pull request, run local quality checks:
 
@@ -85,22 +85,27 @@ go vet ./...
 
 ---
 
-## 📂 Codebase Layout
+## Codebase Layout
 
-```
-ga4gh_service_info_sidecar_gsoc_2026/
-├── cmd/
-│   └── server/
-│       └── main.go          # Entrypoint (HTTP routing, server configuration)
-├── configs/
-│   └── dummy_service_info.yaml # Sample fallback config for local dev
-├── deploy/                  # Kubernetes manifests (Raw & Helm charts)
-├── docs/                    # MkDocs documentation pages
-├── internal/
-│   ├── config/              # YAML config parsing & fsnotify hot-reloader
-│   ├── handler/             # HTTP endpoint handler logic
-│   ├── middleware/          # CORS & metrics middlewares
-│   └── model/               # GA4GH ServiceInfo JSON/YAML model structs
-├── go.mod                   # Module requirements & dependencies
-└── integration_test.go      # E2E integration test suite
+```mermaid
+graph TD
+    Root["ga4gh_service_info_sidecar_gsoc_2026/"]
+    
+    Root --> Cmd["cmd/"]
+    Cmd --> Server["server/"]
+    Server --> Main["main.go\n(Entrypoint: HTTP routing & server configuration)"]
+    
+    Root --> Configs["configs/"]
+    Configs --> DummyYAML["dummy_service_info.yaml\n(Sample fallback config for local dev)"]
+    
+    Root --> Deploy["deploy/\n(Kubernetes manifests & Helm charts)"]
+    Root --> Docs["docs/\n(MkDocs documentation pages)"]
+    
+    Root --> Internal["internal/"]
+    Internal --> Config["config/\n(YAML config parsing & fsnotify hot-reloader)"]
+    Internal --> Handler["handler/\n(HTTP endpoint handler logic)"]
+    Internal --> Middleware["middleware/\n(CORS & metrics middlewares)"]
+    Internal --> Model["model/\n(GA4GH ServiceInfo JSON/YAML models)"]
+    
+    Root --> Integration["integration_test.go\n(E2E integration test suite)"]
 ```
