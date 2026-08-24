@@ -29,7 +29,7 @@ I love solving complex engineering challenges, from concurrency patterns to hard
 
 ## 1. Project Overview & Core Mission
 
-Every [GA4GH](https://www.ga4gh.org/)-compliant service—such as [DRS (Data Repository Service)](https://github.com/ga4gh/data-repository-service-schemas), [WES (Workflow Execution Service)](https://github.com/ga4gh/workflow-execution-service-schemas), [TES (Task Execution Service)](https://github.com/ga4gh/task-execution-schemas), or [TRS (Tool Registry Service)](https://github.com/ga4gh/tool-registry-service-schemas)—is required to expose a [/service-info](https://github.com/ga4gh-discovery/ga4gh-service-info) endpoint that returns structured metadata about the service instance. These standards are described in the [GA4GH core publication](https://www.cell.com/cell-genomics/fulltext/S2666-979X%2821%2900036-7).
+Every [GA4GH](https://www.ga4gh.org/)-compliant service—such as [DRS (Data Repository Service)](https://github.com/ga4gh/data-repository-service-schemas), [WES (Workflow Execution Service)](https://github.com/ga4gh/workflow-execution-service-schemas), [TES (Task Execution Service)](https://github.com/ga4gh/task-execution-schemas), or [TRS (Tool Registry Service)](https://github.com/ga4gh/tool-registry-service-schemas)—is required to expose a [/service-info](https://github.com/ga4gh-discovery/ga4gh-service-info) endpoint that returns structured metadata about the service instance. The wider organizational structure, governance, and use cases for these standard APIs are described in the [GA4GH core publication](https://www.cell.com/cell-genomics/fulltext/S2666-979X%2821%2900036-7).
 
 ### The Problem
 Traditionally, this metadata has been compiled directly into the application binaries or hardcoded in backend databases. This design makes metadata updates operationally complex: updating a simple contact URL or organization name required a full code review, binary rebuild, CI pipeline execution, and Pod restart. 
@@ -181,6 +181,28 @@ sequenceDiagram
 ### Future Work Scope
 *   **aTLS Integration:** Integrate the [Attested-TLS (aTLS) protocol](https://datatracker.ietf.org/doc/draft-fossati-tls-attestation/) into the ServiceInfo Go codebase. During the TLS handshake, the service will supply CPU-signed evidence verifying memory isolation and software integrity (utilizing patterns from the [confidential-ai-example](https://github.com/genxnetwork/confidential-ai-example) implementation).
 *   **Client Verification Interface:** Implement client-side verification tools for other GA4GH services (like TESK or WES) to automatically validate remote service enclaves using vendor certificates.
+
+---
+
+## 10. Reflection: AI-Assisted Engineering Workflow
+
+As a developer working in GSoC 2026, one of the most transformative aspects of my project was the integration of AI coding assistants (like Antigravity) directly into my development workflow. Rather than treating AI as a magic shortcut, I used it as an active pair programmer to accelerate my learning and execution.
+
+### A Transparent Disclaimer & Architectural Brainstorming
+Rather than using AI to generate code blindly, I primarily utilized it as a tool for **architectural brainstorming and critical inquiry**. Every time the AI proposed a design or solution, I would cross-question it: *"Why do we need this particular approach?"*, *"What are the alternative solutions?"*, and *"Why shouldn't we use those alternatives instead?"* Challenging the AI and evaluating alternative architectures was the most valuable part of this workflow. 
+
+Instead of generating the entire codebase all at once, the development progressed step-by-step. We planned the implementation phase-by-phase, focusing on one small feature at a time. After each step, I reviewed the generated modules in context with the rest of the codebase, cross-questioning the code's design: *"Why this implementation? Why not that? What are the pros and cons of this design?"* Finally, I wrote real, robust tests to verify actual runtime behavior and edge cases, rather than just writing dummy tests to artificially boost code coverage metrics.
+
+### The Shift in Coding Practices: From Writer to Reviewer
+Using AI shifted my daily work from writing raw code line-by-line to serving as an **architect and code reviewer**. 
+Instead of writing boilerplate, I spent my time defining detailed requirements, reviewing generated code diffs for potential edge cases, and thinking about system design. It transformed the coding process into a highly collaborative feedback loop of directing, reviewing, compiling, and testing.
+
+### Guide for Aspiring and Seasoned Programmers
+If you are integrating AI into your workflow, here is what I recommend:
+
+1.  **Never Copy-Paste Blindly:** AI is only a helper. If you don't understand the generated code, you shouldn't merge it. You are ultimately responsible for the reliability of the software.
+2.  **Verify with Tests:** AI can write code that looks syntactically correct but fails under load or concurrency. Always back up AI-generated features with robust unit and integration tests.
+3.  **Focus on Requirements:** Spend time writing clear architectural guidelines and prompt parameters. The better your structural planning, the better the resulting code output will be.
 
 ---
 
