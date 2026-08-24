@@ -1,8 +1,8 @@
 # Final report GSoC'26 project Ga4gh
 
 <div align="center" style="display: flex; align-items: center; justify-content: center; gap: 40px; margin: 30px 0; flex-wrap: wrap;">
-  <img src="../assets/ga4gh-logo.svg" alt="GA4GH Logo" style="height: 60px; width: auto;" />
-  <img src="../assets/elixir-logo.svg" alt="ELIXIR Logo" style="height: 60px; width: auto;" />
+  <img src="https://raw.githubusercontent.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026/main/docs/assets/ga4gh-logo.svg" alt="GA4GH Logo" style="height: 60px; width: auto;" />
+  <img src="https://raw.githubusercontent.com/gkbishnoi07/ga4gh_service_info_sidecar_gsoc_2026/gsoc-journey/docs/assets/elixir-logo.svg" alt="ELIXIR Logo" style="height: 60px; width: auto;" />
   <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/GSoC_logo.svg" alt="Google Summer of Code Logo" style="height: 80px; width: auto;" />
 </div>
 
@@ -11,7 +11,7 @@ This is the final report for my project that I've been working on during my summ
 ### Project Details
 
 *   **Student:** [Gopi Kishan](https://github.com/gkbishnoi07) ([LinkedIn](https://www.linkedin.com/in/gkbishnoi07/))
-*   **Mentors:** [Pavel](https://www.linkedin.com/in/pavelnikonorov/), [Alex](https://www.linkedin.com/in/alexanderkanitz/), [Javed Habib](https://www.linkedin.com/in/javed-habib/)
+*   **Mentors:** [Pavel](https://github.com/pavelnikonorov), [Alex](https://github.com/uniqueg), [Javed Habib](https://github.com/JaeAeich)
 *   **Organization:** [GA4GH](https://www.ga4gh.org/)
 *   **Repository:** [ga4gh_service_info_sidecar_gsoc_2026](https://github.com/ga4gh/ga4gh_service_info_sidecar_gsoc_2026)
 
@@ -29,7 +29,7 @@ I love solving complex engineering challenges, from concurrency patterns to hard
 
 ## 1. Project Overview & Core Mission
 
-Every GA4GH-compliant service (such as DRS, WES, TES, or TRS) is required to expose a `/service-info` endpoint that returns structured metadata about the service instance. 
+Every [GA4GH](https://www.ga4gh.org/)-compliant service—such as [DRS (Data Repository Service)](https://github.com/ga4gh/data-repository-service-schemas), [WES (Workflow Execution Service)](https://github.com/ga4gh/workflow-execution-service-schemas), [TES (Task Execution Service)](https://github.com/ga4gh/task-execution-schemas), or [TRS (Tool Registry Service)](https://github.com/ga4gh/tool-registry-service-schemas)—is required to expose a [/service-info](https://github.com/ga4gh-discovery/ga4gh-service-info) endpoint that returns structured metadata about the service instance. These standards are described in the [GA4GH core publication](https://www.cell.com/cell-genomics/fulltext/S2666-979X%2821%2900036-7).
 
 ### The Problem
 Traditionally, this metadata has been compiled directly into the application binaries or hardcoded in backend databases. This design makes metadata updates operationally complex: updating a simple contact URL or organization name required a full code review, binary rebuild, CI pipeline execution, and Pod restart. 
@@ -159,7 +159,7 @@ The table below records all pull requests completed during the GSoC 2026 lifecyc
 
 ## 9. The Next Horizon: Attested-TLS (aTLS) & Confidential Computing
 
-In collaboration with my mentors, the next phase of this project extends the ServiceInfo microservice to support **Confidential Computing** in federated clouds (such as the ELIXIR Cloud federation).
+In collaboration with my mentors, the next phase of this project extends the ServiceInfo microservice to support **Confidential Computing** (supported by the [Confidential Computing Consortium](https://confidentialcomputing.io/)) in federated clouds (such as the ELIXIR Cloud federation).
 
 ### The Objective
 Establish hardware-level trust for GA4GH metadata endpoints. Instead of simply trusting the server domain, clients must be able to verify that the service is running inside a secure, untampered **Trusted Execution Environment (TEE)** (using Intel SGX or AMD SEV).
@@ -179,7 +179,7 @@ sequenceDiagram
 ```
 
 ### Future Work Scope
-*   **aTLS Integration:** Integrate the Attested-TLS protocol into the ServiceInfo Go codebase. During the TLS handshake, the service will supply CPU-signed evidence verifying memory isolation and software integrity.
+*   **aTLS Integration:** Integrate the [Attested-TLS (aTLS) protocol](https://datatracker.ietf.org/doc/draft-fossati-tls-attestation/) into the ServiceInfo Go codebase. During the TLS handshake, the service will supply CPU-signed evidence verifying memory isolation and software integrity (utilizing patterns from the [confidential-ai-example](https://github.com/genxnetwork/confidential-ai-example) implementation).
 *   **Client Verification Interface:** Implement client-side verification tools for other GA4GH services (like TESK or WES) to automatically validate remote service enclaves using vendor certificates.
 
 ---
